@@ -16,16 +16,17 @@
       <li><a href="/">Home</a></li>
 
       <% if (session && session.user) { %>
-        <li><a href="/grades/new">New Grade</a></li>
-        <li><a href="/grades">Grades</a></li>
+        <li><a href="/projects">Projects</a></li>
+        <li><a href="/grades/new">New Unit</a></li>
+        <li><a href="/grades">Units</a></li>
+        <li><a href="/presets">Presets</a></li>
 
         <% if (session.user.role === "ADMIN") { %>
           <li>
             <details>
               <summary>Admin</summary>
               <ul class="p-2">
-                <li><a href="/presets">Presets</a></li>
-                <li><a href="/presets/add">Add Preset</a></li>
+                <li><a href="/projects/new">New Project</a></li>
                 <li><a href="/admin/users">Users</a></li>
               </ul>
             </details>
@@ -37,6 +38,14 @@
 
   <div class="navbar-end">
     <% if (session && session.user) { %>
+      <% if (currentProject) { %>
+        <span class="mr-3 text-xs hidden lg:inline">
+          Project: <b><%= currentProject.projectName %></b>
+          (<%= currentProject.deviceType %>, <%= currentProject.status %>)
+        </span>
+      <% } else { %>
+        <span class="mr-3 text-xs hidden lg:inline opacity-70">No project selected</span>
+      <% } %>
       <span class="mr-2 text-sm hidden md:inline">
         <b><%= session.user.userName %></b> (<%= session.user.role %>)
       </span>

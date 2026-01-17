@@ -11,7 +11,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grades - Laptop Grading</title>
+  <title>Units - Laptop Grading</title>
   <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
@@ -19,8 +19,8 @@
 
   <div class="container mx-auto px-4 py-8">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-3xl font-bold">Grades</h1>
-      <a href="/grades/new" class="btn btn-primary btn-sm">New Grade</a>
+      <h1 class="text-3xl font-bold">Units</h1>
+      <a href="/grades/new" class="btn btn-primary btn-sm">New Unit</a>
     </div>
 
     <% if (session && session.user && session.user.role === "ADMIN") { %>
@@ -30,10 +30,46 @@
 
           <form method="GET" action="/grades" class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div class="form-control">
+              <label class="label"><span class="label-text">Project</span></label>
+              <select name="projectId" class="select select-bordered">
+                <option value="">(all)</option>
+                <% (projects || []).forEach(p => { %>
+                  <option value="<%= p.id %>" <%= (String(filters.projectId) === String(p.id)) ? "selected" : "" %> >
+                    <%= p.projectName %> (<%= p.deviceType %>) <%= p.status === 'CLOSED' ? '[closed]' : '' %>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text">Device Type</span></label>
+              <select name="deviceType" class="select select-bordered">
+                <option value="">(all)</option>
+                <% (deviceTypes || []).forEach(t => { %>
+                  <option value="<%= t %>" <%= (filters.deviceType === t) ? "selected" : "" %> >
+                    <%= t %>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text">Model</span></label>
+              <select name="model" class="select select-bordered">
+                <option value="">(all)</option>
+                <% (models || []).forEach(m => { %>
+                  <option value="<%= m %>" <%= (filters.model === m) ? "selected" : "" %> >
+                    <%= m %>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="form-control">
               <label class="label"><span class="label-text">Technician</span></label>
               <select name="technician" class="select select-bordered">
                 <option value="">(all)</option>
-                <% users.forEach(u => { %>
+                <% (users || []).forEach(u => { %>
                   <option value="<%= u.userName %>" <%= (filters.technician === u.userName) ? "selected" : "" %> >
                     <%= u.userName %> (<%= u.role %>) <%= u.active ? "" : "[disabled]" %>
                   </option>
@@ -45,7 +81,7 @@
               <label class="label"><span class="label-text">Preset</span></label>
               <select name="presetId" class="select select-bordered">
                 <option value="">(all)</option>
-                <% presets.forEach(p => { %>
+                <% (presets || []).forEach(p => { %>
                   <option value="<%= p.id %>" <%= (String(filters.presetId) === String(p.id)) ? "selected" : "" %> >
                     <%= p.brand %> <%= p.model %> — <%= p.presetLabel %> <%= p.active ? "" : "[disabled]" %>
                   </option>
@@ -70,6 +106,14 @@
           </form>
         </div>
       </div>
+    <% } else { %>
+      <form method="GET" action="/grades" class="mb-4">
+        <label class="label cursor-pointer justify-start gap-3">
+          <input type="checkbox" name="onlyMineToday" value="1" class="checkbox" <%= filters.onlyMineToday ? 'checked' : '' %> />
+          <span class="label-text">Only what I added today</span>
+        </label>
+        <button class="btn btn-sm btn-primary" type="submit">Apply</button>
+      </form>
     <% } %>
 
     <div class="overflow-x-auto">
@@ -77,43 +121,45 @@
         <thead>
           <tr>
             <th>Date</th>
+            <th>Project</th>
             <th>Serial</th>
-            <th>Preset</th>
+            <th>Brand</th>
+            <th>Model</th>
             <th>CPU</th>
             <th>RAM</th>
             <th>SSD</th>
             <th>Touch</th>
-            <th>Battery %</th>
+            <th>Observations</th>
             <th>Technician</th>
-            <th>Notes</th>
           </tr>
         </thead>
         <tbody>
           <% grades.forEach(g => { %>
             <tr>
               <td><%= new Date(g.createdAt).toLocaleString() %></td>
-              <td class="font-semibold"><%= g.serialNumber %></td>
               <td>
-                <% if (g.ModelPreset) { %>
-                  <%= g.ModelPreset.brand %> <%= g.ModelPreset.model %> — <%= g.ModelPreset.presetLabel %>
+                <% if (g.Project) { %>
+                  <%= g.Project.projectName %> (<%= g.Project.deviceType %>)
                 <% } else { %>
-                  (no preset)
+                  -
                 <% } %>
               </td>
+              <td class="font-semibold"><%= g.serialNumber %></td>
+              <td><%= g.brand || '-' %></td>
+              <td><%= g.model || '-' %></td>
               <td><%= g.cpu %></td>
               <td><%= g.ramGb %>GB</td>
               <td><%= g.ssdGb %>GB</td>
-              <td><%= g.touchscreen ? "Yes" : "No" %></td>
-              <td><%= g.batteryHealthPercent %></td>
-              <td><%= g.User ? g.User.userName : "-" %></td>
+              <td><%= g.touchStatus || (g.touchscreen ? 'TOUCH' : 'NO_TOUCH') %></td>
               <td style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                <%= g.notes %>
+                <%= g.observations || '' %>
               </td>
+              <td><%= g.User ? g.User.userName : '-' %></td>
             </tr>
           <% }); %>
 
           <% if (!grades || grades.length === 0) { %>
-            <tr><td colspan="10">No records found.</td></tr>
+            <tr><td colspan="11">No records found.</td></tr>
           <% } %>
         </tbody>
       </table>

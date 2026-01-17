@@ -78,6 +78,8 @@
             <th>RAM</th>
             <th>SSD</th>
             <th>Touch</th>
+            <th>Observations</th>
+            <th>Created By</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -92,11 +94,19 @@
               <td><%= p.defaultCpu %></td>
               <td><%= p.defaultRamGb %>GB</td>
               <td><%= p.defaultSsdGb %>GB</td>
-              <td><%= p.defaultTouchscreen ? "Yes" : "No" %></td>
+              <td><%= p.touchDefault || "NO_TOUCH" %></td>
+              <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <%= p.defaultObservations || "" %>
+              </td>
+              <td><%= p.User ? p.User.userName : "-" %></td>
               <td><%= p.active ? "Active" : "Disabled" %></td>
               <td>
-                <% if (p.active) { %>
-                  <a class="btn btn-xs btn-warning" href="/presets/disable/<%= p.id %>">Disable</a>
+                <% if (session && session.user && session.user.role === "ADMIN") { %>
+                  <% if (p.active) { %>
+                    <a class="btn btn-xs btn-warning" href="/presets/deactivate/<%= p.id %>">Deactivate</a>
+                  <% } else { %>
+                    <a class="btn btn-xs btn-success" href="/presets/activate/<%= p.id %>">Activate</a>
+                  <% } %>
                 <% } else { %>
                   <span class="text-sm opacity-60">—</span>
                 <% } %>
@@ -105,7 +115,7 @@
           <% }); %>
 
           <% if (!presets || presets.length === 0) { %>
-            <tr><td colspan="10">No presets yet.</td></tr>
+            <tr><td colspan="12">No presets yet.</td></tr>
           <% } %>
         </tbody>
       </table>

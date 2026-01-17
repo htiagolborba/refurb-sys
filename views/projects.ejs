@@ -1,0 +1,93 @@
+<!--
+  Laptop Grading System (LGS)
+  Developed by: Hiran Tiago Lins Borba
+  Year: 2026
+  History:
+  - 0.1 (2026-01-17) Beta release
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects - Laptop Grading</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl font-bold">Projects</h1>
+      <% if (session && session.user && session.user.role === "ADMIN") { %>
+        <a href="/projects/new" class="btn btn-primary btn-sm">New Project</a>
+      <% } %>
+    </div>
+
+    <% if (message) { %>
+      <div class="alert alert-info mb-4"><span><%= message %></span></div>
+    <% } %>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Device Type</th>
+            <th>Units</th>
+            <th>Open</th>
+            <th>Export</th>
+            <% if (session && session.user && session.user.role === "ADMIN") { %>
+              <th>Close</th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% projects.forEach(p => { %>
+            <tr class="<%= (currentProject && String(currentProject.id) === String(p.id)) ? 'bg-base-200' : '' %>">
+              <td><%= p.status %></td>
+              <td class="font-semibold"><%= p.projectName %></td>
+              <td><%= new Date(p.projectDate).toLocaleDateString() %></td>
+              <td><%= p.deviceType %></td>
+              <td><%= p.unitCount || 0 %></td>
+              <td>
+                <% if (p.status === 'OPEN') { %>
+                  <a class="btn btn-xs btn-primary" href="/projects/<%= p.id %>/open">Select</a>
+                <% } else { %>
+                  <span class="text-sm opacity-60">Closed</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (session && session.user && session.user.role === "ADMIN") { %>
+                  <div class="flex gap-2">
+                    <a class="btn btn-xs btn-outline" href="/projects/<%= p.id %>/export.csv">CSV</a>
+                    <a class="btn btn-xs btn-ghost" href="/projects/<%= p.id %>/export.xlsx">XLSX</a>
+                  </div>
+                <% } else { %>
+                  <span class="text-sm opacity-60">—</span>
+                <% } %>
+              </td>
+              <% if (session && session.user && session.user.role === "ADMIN") { %>
+                <td>
+                  <% if (p.status === 'OPEN') { %>
+                    <a class="btn btn-xs btn-warning" href="/projects/<%= p.id %>/close">Close</a>
+                  <% } else { %>
+                    <span class="text-sm opacity-60">—</span>
+                  <% } %>
+                </td>
+              <% } %>
+            </tr>
+          <% }); %>
+
+          <% if (!projects || projects.length === 0) { %>
+            <tr><td colspan="<%= (session && session.user && session.user.role === "ADMIN") ? 8 : 7 %>">No projects yet.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

@@ -68,8 +68,8 @@
         </div>
 
         <div class="form-control md:col-span-2">
-          <label class="label"><span class="label-text">Preset Label</span></label>
-          <input type="text" name="presetLabel" required class="input input-bordered w-full"
+          <label class="label"><span class="label-text">Preset Label (optional)</span></label>
+          <input type="text" name="presetLabel" class="input input-bordered w-full"
                  placeholder="7420 i7 32/256"
                  value="<%= form.presetLabel || '' %>"/>
         </div>
@@ -109,12 +109,18 @@
                  value="<%= form.defaultSsdGb || '' %>"/>
         </div>
 
+        <div class="form-control">
+          <label class="label"><span class="label-text">Touch Default</span></label>
+          <select name="touchDefault" class="select select-bordered w-full">
+            <option value="NO_TOUCH" <%= (form.touchDefault === 'NO_TOUCH' || !form.touchDefault) ? 'selected' : '' %>>NO_TOUCH</option>
+            <option value="TOUCH" <%= (form.touchDefault === 'TOUCH') ? 'selected' : '' %>>TOUCH</option>
+            <option value="BROKEN" <%= (form.touchDefault === 'BROKEN') ? 'selected' : '' %>>BROKEN</option>
+          </select>
+        </div>
+
         <div class="form-control md:col-span-2">
-          <label class="label"><span class="label-text">Default Touchscreen</span></label>
-          <label class="label cursor-pointer justify-start gap-3">
-            <input type="checkbox" name="defaultTouchscreen" class="checkbox" <%= (form.defaultTouchscreen === 'on') ? 'checked' : '' %> />
-            <span class="label-text">Yes</span>
-          </label>
+          <label class="label"><span class="label-text">Default Observations (optional)</span></label>
+          <textarea name="defaultObservations" class="textarea textarea-bordered h-24" placeholder="scratches, missing key, etc."><%= form.defaultObservations || '' %></textarea>
         </div>
       </div>
 

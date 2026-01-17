@@ -1,0 +1,55 @@
+<!--
+  Laptop Grading System (LGS)
+  Developed by: Hiran Tiago Lins Borba
+  Year: 2026
+  History:
+  - 0.1 (2026-01-17) Beta release
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Project - Laptop Grading</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="hero bg-base-200 rounded-lg mb-8">
+      <div class="hero-content text-center">
+        <div class="max-w-2xl">
+          <h1 class="text-4xl font-bold">New Project</h1>
+          <p class="py-4">Create a new batch/lot for technicians.</p>
+        </div>
+      </div>
+    </div>
+
+    <% if (errorMessage) { %>
+      <div class="alert alert-error mb-4"><span><%= errorMessage %></span></div>
+    <% } %>
+
+    <form action="/projects/new" method="POST" class="space-y-4 max-w-xl mx-auto">
+      <div class="form-control">
+        <label class="label"><span class="label-text">Project Name</span></label>
+        <input type="text" name="projectName" required class="input input-bordered w-full" value="<%= form.projectName || '' %>" />
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text">Device Type</span></label>
+        <select name="deviceType" class="select select-bordered w-full">
+          <option value="LAPTOP" <%= (form.deviceType === 'LAPTOP' || !form.deviceType) ? 'selected' : '' %>>LAPTOP</option>
+          <option value="DESKTOP" <%= (form.deviceType === 'DESKTOP') ? 'selected' : '' %>>DESKTOP</option>
+        </select>
+      </div>
+
+      <div class="form-control mt-6 flex gap-3">
+        <button type="submit" class="btn btn-primary">Create Project</button>
+        <a href="/projects" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
