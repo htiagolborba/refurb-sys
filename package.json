@@ -1,0 +1,28 @@
+{
+  "name": "laptop-grading-system",
+  "version": "1.0.0",
+  "description": "Internal Laptop Grading System (Vercel + Neon)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "tw:build": "tailwindcss -i ./public/css/tailwind.css -o ./public/css/main.css"
+  },
+  "keywords": [],
+  "author": "Hiran Borba",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "client-sessions": "^0.8.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.10",
+    "daisyui": "^4.4.19",
+    "tailwindcss": "^3.3.5"
+  }
+}
