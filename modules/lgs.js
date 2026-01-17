@@ -1,28 +1,47 @@
+/*
+ * Laptop Grading System (LGS)
+ * Developed by: Hiran Tiago Lins Borba
+ * Year: 2026
+ * History:
+ * - 0.1 (2026-01-17) Beta release
+ */
+
 require("dotenv").config();
+const path = require("path");
 const Sequelize = require("sequelize");
 const bcrypt = require("bcryptjs");
 
-// Neon / Postgres via env vars separados (igual seu projeto atual)
-const sequelize = new Sequelize(
-  process.env.PGDATABASE,
-  process.env.PGUSER,
-  process.env.PGPASSWORD,
-  {
-    host: process.env.PGHOST,
-    dialect: "postgres",
-    dialectOptions: {
-      ssl: { require: true, rejectUnauthorized: false }
-    },
-    logging: false,
-    pool: {
-      max: 1,       // serverless-friendly
-      min: 0,
-      idle: 10000,
-      acquire: 30000,
-      evict: 10000
-    }
-  }
-);
+const isSQLite =
+  (process.env.DB_DIALECT || "").toLowerCase() === "sqlite" ||
+  process.env.USE_SQLITE === "true" ||
+  !process.env.PGHOST;
+
+const sequelize = isSQLite
+  ? new Sequelize({
+      dialect: "sqlite",
+      storage: process.env.SQLITE_PATH || path.join(__dirname, "..", "lgs.sqlite"),
+      logging: false
+    })
+  : new Sequelize(
+      process.env.PGDATABASE,
+      process.env.PGUSER,
+      process.env.PGPASSWORD,
+      {
+        host: process.env.PGHOST,
+        dialect: "postgres",
+        dialectOptions: {
+          ssl: { require: true, rejectUnauthorized: false }
+        },
+        logging: false,
+        pool: {
+          max: 1,       // serverless-friendly
+          min: 0,
+          idle: 10000,
+          acquire: 30000,
+          evict: 10000
+        }
+      }
+    );
 
 // ===== Models =====
 

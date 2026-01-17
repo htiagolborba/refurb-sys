@@ -1,3 +1,11 @@
+/*
+ * Laptop Grading System (LGS)
+ * Developed by: Hiran Tiago Lins Borba
+ * Year: 2026
+ * History:
+ * - 0.1 (2026-01-17) Beta release
+ */
+
 //to populate db
 
 require("dotenv").config();
