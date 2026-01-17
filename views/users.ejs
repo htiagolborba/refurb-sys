@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users - Laptop Grading System</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl font-bold">Users</h1>
+    </div>
+
+    <% if (errorMessage) { %>
+      <div class="alert alert-error mb-4"><span><%= errorMessage %></span></div>
+    <% } %>
+
+    <div class="card bg-base-200 mb-6">
+      <div class="card-body">
+        <h2 class="card-title text-lg">Add User</h2>
+
+        <form action="/admin/users/add" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div class="form-control">
+            <label class="label"><span class="label-text">User Name</span></label>
+            <input type="text" name="userName" class="input input-bordered" required />
+          </div>
+
+          <div class="form-control">
+            <label class="label"><span class="label-text">Password</span></label>
+            <input type="password" name="password" class="input input-bordered" required />
+          </div>
+
+          <div class="form-control">
+            <label class="label"><span class="label-text">Role</span></label>
+            <select name="role" class="select select-bordered">
+              <option value="TECH">TECH</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+
+          <div class="form-control md:pt-9">
+            <button class="btn btn-primary" type="submit">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(u => { %>
+            <tr>
+              <td class="font-semibold"><%= u.userName %></td>
+              <td><%= u.role %></td>
+              <td><%= u.active ? "Active" : "Disabled" %></td>
+              <td class="flex gap-2">
+                <% if (u.active) { %>
+                  <a class="btn btn-xs btn-warning" href="/admin/users/disable/<%= u.id %>">Disable</a>
+                <% } else { %>
+                  <a class="btn btn-xs btn-success" href="/admin/users/enable/<%= u.id %>">Enable</a>
+                <% } %>
+
+                <a class="btn btn-xs btn-outline" href="/admin/users/role/<%= u.id %>?role=TECH">Make TECH</a>
+                <a class="btn btn-xs btn-outline" href="/admin/users/role/<%= u.id %>?role=ADMIN">Make ADMIN</a>
+              </td>
+            </tr>
+          <% }); %>
+
+          <% if (!users || users.length === 0) { %>
+            <tr><td colspan="4">No users found.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

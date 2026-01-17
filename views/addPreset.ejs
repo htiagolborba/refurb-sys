@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Preset - Laptop Grading</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="hero bg-base-200 rounded-lg mb-8">
+      <div class="hero-content text-center">
+        <div class="max-w-2xl">
+          <h1 class="text-4xl font-bold">Add Model Preset</h1>
+          <p class="py-4">Create a new standard configuration for quick grading.</p>
+        </div>
+      </div>
+    </div>
+
+    <% if (errorMessage) { %>
+      <div class="alert alert-error mb-4"><span><%= errorMessage %></span></div>
+    <% } %>
+
+    <form action="/presets/add" method="POST" class="space-y-4 max-w-2xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text">Brand</span></label>
+          <select id="brandSelect" name="brand" required class="select select-bordered w-full">
+            <option value="" disabled <%= !form.brand ? "selected" : "" %>>Select brand</option>
+            <option value="Dell" <%= form.brand === "Dell" ? "selected" : "" %>>Dell</option>
+            <option value="HP" <%= form.brand === "HP" ? "selected" : "" %>>HP</option>
+            <option value="Lenovo" <%= form.brand === "Lenovo" ? "selected" : "" %>>Lenovo</option>
+            <option value="Apple" <%= form.brand === "Apple" ? "selected" : "" %>>Apple</option>
+            <option value="OTHER" <%= form.brandOther ? "selected" : "" %>>Other</option>
+          </select>
+          <input
+            id="brandOther"
+            type="text"
+            name="brandOther"
+            class="input input-bordered w-full mt-2"
+            placeholder="Enter brand"
+            value="<%= form.brandOther || '' %>"
+            disabled
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Model</span></label>
+          <input type="text" name="model" required class="input input-bordered w-full" value="<%= form.model || '' %>"/>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Device Type</span></label>
+          <select name="deviceType" class="select select-bordered w-full">
+            <option value="LAPTOP" <%= (form.deviceType === "LAPTOP" || !form.deviceType) ? "selected" : "" %>>Laptop</option>
+            <option value="DESKTOP" <%= (form.deviceType === "DESKTOP") ? "selected" : "" %>>Desktop</option>
+          </select>
+        </div>
+
+        <div class="form-control md:col-span-2">
+          <label class="label"><span class="label-text">Preset Label</span></label>
+          <input type="text" name="presetLabel" required class="input input-bordered w-full"
+                 placeholder="7420 i7 32/256"
+                 value="<%= form.presetLabel || '' %>"/>
+        </div>
+
+        <div class="form-control md:col-span-2">
+          <label class="label"><span class="label-text">Default CPU</span></label>
+          <input type="text" name="defaultCpu" required class="input input-bordered w-full"
+                 placeholder="Core i7 11th gen"
+                 value="<%= form.defaultCpu || '' %>"/>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Default RAM (GB)</span></label>
+          <select id="defaultRamSelect" name="defaultRamGb" required class="select select-bordered w-full">
+            <option value="" disabled <%= !form.defaultRamGb ? "selected" : "" %>>Select RAM</option>
+            <option value="4" <%= String(form.defaultRamGb) === "4" ? "selected" : "" %>>4 GB</option>
+            <option value="8" <%= String(form.defaultRamGb) === "8" ? "selected" : "" %>>8 GB</option>
+            <option value="16" <%= String(form.defaultRamGb) === "16" ? "selected" : "" %>>16 GB</option>
+            <option value="64" <%= String(form.defaultRamGb) === "64" ? "selected" : "" %>>64 GB</option>
+            <option value="128" <%= String(form.defaultRamGb) === "128" ? "selected" : "" %>>128 GB</option>
+            <option value="OTHER" <%= form.defaultRamGbOther ? "selected" : "" %>>Other</option>
+          </select>
+          <input
+            id="defaultRamOther"
+            type="number"
+            name="defaultRamGbOther"
+            class="input input-bordered w-full mt-2"
+            placeholder="Enter RAM (GB)"
+            value="<%= form.defaultRamGbOther || '' %>"
+            disabled
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Default SSD (GB)</span></label>
+          <input type="number" name="defaultSsdGb" required class="input input-bordered w-full"
+                 value="<%= form.defaultSsdGb || '' %>"/>
+        </div>
+
+        <div class="form-control md:col-span-2">
+          <label class="label"><span class="label-text">Default Touchscreen</span></label>
+          <label class="label cursor-pointer justify-start gap-3">
+            <input type="checkbox" name="defaultTouchscreen" class="checkbox" <%= (form.defaultTouchscreen === 'on') ? 'checked' : '' %> />
+            <span class="label-text">Yes</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-control mt-6 flex gap-3">
+        <button type="submit" class="btn btn-primary">Save Preset</button>
+        <a href="/presets" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const brandSelect = document.getElementById("brandSelect");
+    const brandOther = document.getElementById("brandOther");
+    const ramSelect = document.getElementById("defaultRamSelect");
+    const ramOther = document.getElementById("defaultRamOther");
+
+    function syncBrandOtherState() {
+      const isOther = brandSelect.value === "OTHER";
+      brandOther.disabled = !isOther;
+      brandOther.required = isOther;
+      if (!isOther) brandOther.value = "";
+    }
+
+    function syncRamOtherState() {
+      const isOther = ramSelect.value === "OTHER";
+      ramOther.disabled = !isOther;
+      if (!isOther) ramOther.value = "";
+    }
+
+    brandSelect.addEventListener("change", syncBrandOtherState);
+    ramSelect.addEventListener("change", syncRamOtherState);
+    window.addEventListener("load", syncRamOtherState);
+    window.addEventListener("load", syncBrandOtherState);
+  </script>
+</body>
+</html>

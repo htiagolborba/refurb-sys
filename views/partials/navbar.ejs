@@ -1,0 +1,40 @@
+<div class="navbar bg-base-100">
+  <div class="navbar-start">
+    <a href="/" class="btn btn-ghost text-xl">Laptop Grading</a>
+  </div>
+
+  <div class="navbar-center hidden lg:flex">
+    <ul class="menu menu-horizontal px-1">
+      <li><a href="/">Home</a></li>
+
+      <% if (session && session.user) { %>
+        <li><a href="/grades/new">New Grade</a></li>
+        <li><a href="/grades">Grades</a></li>
+
+        <% if (session.user.role === "ADMIN") { %>
+          <li>
+            <details>
+              <summary>Admin</summary>
+              <ul class="p-2">
+                <li><a href="/presets">Presets</a></li>
+                <li><a href="/presets/add">Add Preset</a></li>
+                <li><a href="/admin/users">Users</a></li>
+              </ul>
+            </details>
+          </li>
+        <% } %>
+      <% } %>
+    </ul>
+  </div>
+
+  <div class="navbar-end">
+    <% if (session && session.user) { %>
+      <span class="mr-2 text-sm hidden md:inline">
+        <b><%= session.user.userName %></b> (<%= session.user.role %>)
+      </span>
+      <a href="/logout" class="btn btn-sm">Sign Out</a>
+    <% } else { %>
+      <a href="/login" class="btn btn-sm">Sign In</a>
+    <% } %>
+  </div>
+</div>

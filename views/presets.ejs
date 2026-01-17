@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presets - Laptop Grading</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl font-bold">Model Presets</h1>
+      <a href="/presets/add" class="btn btn-primary btn-sm">Add Preset</a>
+    </div>
+
+    <div class="card bg-base-200 mb-6">
+      <div class="card-body">
+        <h2 class="card-title text-lg">Filters</h2>
+
+        <form method="GET" action="/presets" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="form-control">
+            <label class="label"><span class="label-text">Device Type</span></label>
+            <select name="deviceType" class="select select-bordered">
+              <option value="">(all)</option>
+              <% deviceTypes.forEach(t => { %>
+                <option value="<%= t %>" <%= (filters.deviceType === t) ? "selected" : "" %>><%= t %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label class="label"><span class="label-text">Brand</span></label>
+            <select name="brand" class="select select-bordered">
+              <option value="">(all)</option>
+              <% brands.forEach(b => { %>
+                <option value="<%= b %>" <%= (filters.brand === b) ? "selected" : "" %>><%= b %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label class="label"><span class="label-text">Model</span></label>
+            <select name="model" class="select select-bordered">
+              <option value="">(all)</option>
+              <% models.forEach(m => { %>
+                <option value="<%= m %>" <%= (filters.model === m) ? "selected" : "" %>><%= m %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="md:col-span-3 flex gap-2">
+            <button class="btn btn-sm btn-primary" type="submit">Apply</button>
+            <a class="btn btn-sm btn-ghost" href="/presets">Reset</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Label</th>
+            <th>CPU</th>
+            <th>RAM</th>
+            <th>SSD</th>
+            <th>Touch</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% presets.forEach(p => { %>
+            <tr>
+              <td><%= p.deviceType || "LAPTOP" %></td>
+              <td><%= p.brand %></td>
+              <td><%= p.model %></td>
+              <td class="font-semibold"><%= p.presetLabel %></td>
+              <td><%= p.defaultCpu %></td>
+              <td><%= p.defaultRamGb %>GB</td>
+              <td><%= p.defaultSsdGb %>GB</td>
+              <td><%= p.defaultTouchscreen ? "Yes" : "No" %></td>
+              <td><%= p.active ? "Active" : "Disabled" %></td>
+              <td>
+                <% if (p.active) { %>
+                  <a class="btn btn-xs btn-warning" href="/presets/disable/<%= p.id %>">Disable</a>
+                <% } else { %>
+                  <span class="text-sm opacity-60">—</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+
+          <% if (!presets || presets.length === 0) { %>
+            <tr><td colspan="10">No presets yet.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

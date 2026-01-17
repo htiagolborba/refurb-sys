@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - Laptop Grading</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="hero bg-base-200 rounded-lg mb-8">
+      <div class="hero-content text-center">
+        <div class="max-w-2xl">
+          <h1 class="text-4xl font-bold">Laptop Grading System</h1>
+          <p class="py-4">
+            @developed by Hiran Borba :D <br/>
+            Centralized grading records for refurbishing workflow.
+            No more multiple Excel sheets and USB merges.
+          </p>
+
+          <% if (session && session.user) { %>
+            <div class="flex flex-wrap gap-2 justify-center">
+              <a href="/grades/new" class="btn btn-primary">New Grade</a>
+              <a href="/grades" class="btn btn-outline">View Grades</a>
+            </div>
+          <% } else { %>
+            <a href="/login" class="btn btn-primary">Sign In</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose max-w-none">
+      <h2>Workflow</h2>
+      <ul>
+        <li>Select a preset (model/config) → fields auto-fill.</li>
+        <li>Scan/type Serial Number.</li>
+        <li>Enter Battery Health % and Notes/Observations.</li>
+        <li>Save → record is stored in the shared DB.</li>
+      </ul>
+    </div>
+
+    <% if (session && session.user && session.user.role === "ADMIN") { %>
+      <div class="mt-8">
+        <div class="card bg-base-200">
+          <div class="card-body">
+            <h2 class="card-title">Admin Menu</h2>
+            <p>Manage users and presets. Permissions can be refined later.</p>
+            <div class="flex flex-wrap gap-2">
+              <a href="/admin/users" class="btn btn-primary btn-sm">Users</a>
+              <a href="/presets" class="btn btn-outline btn-sm">Presets</a>
+              <a href="/presets/add" class="btn btn-ghost btn-sm">Add Preset</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

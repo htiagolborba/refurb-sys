@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Grade - Laptop Grading</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="hero bg-base-200 rounded-lg mb-8">
+      <div class="hero-content text-center">
+        <div class="max-w-2xl">
+          <h1 class="text-4xl font-bold">New Laptop Grade</h1>
+          <p class="py-4">Select a preset → scan serial → battery % → notes → save.</p>
+        </div>
+      </div>
+    </div>
+
+    <% if (errorMessage) { %>
+      <div class="alert alert-error mb-4"><span><%= errorMessage %></span></div>
+    <% } %>
+
+    <% if (successMessage) { %>
+      <div class="alert alert-success mb-4"><span><%= successMessage %></span></div>
+    <% } %>
+
+    <form action="/grades/new" method="POST" class="space-y-4 max-w-3xl mx-auto">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text">Preset (Model/Config)</span></label>
+          <select id="presetId" name="presetId" required class="select select-bordered w-full">
+            <option value="" disabled selected>Select a preset</option>
+            <% presets.forEach(p => { %>
+              <option
+                value="<%= p.id %>"
+                data-brand="<%= p.brand %>"
+                data-model="<%= p.model %>"
+                data-cpu="<%= p.defaultCpu %>"
+                data-ram="<%= p.defaultRamGb %>"
+                data-ssd="<%= p.defaultSsdGb %>"
+                data-touch="<%= p.defaultTouchscreen ? 'true' : 'false' %>"
+              >
+                <%= p.brand %> <%= p.model %> — <%= p.presetLabel %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Serial Number</span></label>
+          <input
+            id="serialNumber"
+            type="text"
+            name="serialNumber"
+            required
+            class="input input-bordered w-full"
+            placeholder="Scan or type serial"
+            value="<%= form.serialNumber || '' %>"
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">CPU</span></label>
+          <input id="cpu" type="text" name="cpu" class="input input-bordered w-full" value="<%= form.cpu || '' %>" />
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">RAM (GB)</span></label>
+          <input id="ramGb" type="number" name="ramGb" class="input input-bordered w-full" value="<%= form.ramGb || '' %>" />
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">SSD (GB)</span></label>
+          <input id="ssdGb" type="number" name="ssdGb" class="input input-bordered w-full" value="<%= form.ssdGb || '' %>" />
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Touchscreen</span></label>
+          <label class="label cursor-pointer justify-start gap-3">
+            <input id="touchscreen" type="checkbox" name="touchscreen" class="checkbox" <%= (form.touchscreen === 'on') ? 'checked' : '' %> />
+            <span class="label-text">Yes</span>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Battery Health (%)</span></label>
+          <input
+            id="batteryHealthPercent"
+            type="number"
+            name="batteryHealthPercent"
+            required
+            min="0"
+            max="100"
+            class="input input-bordered w-full"
+            placeholder="0 - 100"
+            value="<%= form.batteryHealthPercent || '' %>"
+          />
+        </div>
+
+        <div class="form-control md:col-span-2">
+          <label class="label"><span class="label-text">Notes / Observations</span></label>
+          <textarea
+            id="notes"
+            name="notes"
+            class="textarea textarea-bordered h-28"
+            placeholder="broken screen, scratches, peeling palm rest..."
+          ><%= form.notes || '' %></textarea>
+        </div>
+      </div>
+
+      <div class="form-control mt-6 flex gap-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/grades" class="btn btn-ghost">View Grades</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Auto-fill fields when preset changes
+    const presetSelect = document.getElementById("presetId");
+    const cpu = document.getElementById("cpu");
+    const ramGb = document.getElementById("ramGb");
+    const ssdGb = document.getElementById("ssdGb");
+    const touchscreen = document.getElementById("touchscreen");
+    const serial = document.getElementById("serialNumber");
+
+    presetSelect.addEventListener("change", () => {
+      const opt = presetSelect.options[presetSelect.selectedIndex];
+      if (!opt) return;
+
+      cpu.value = opt.dataset.cpu || "";
+      ramGb.value = opt.dataset.ram || "";
+      ssdGb.value = opt.dataset.ssd || "";
+      touchscreen.checked = (opt.dataset.touch === "true");
+
+      // Focus serial for scanner speed
+      serial.focus();
+      serial.select();
+    });
+
+    // On page load, focus serial if already logged in
+    window.addEventListener("load", () => {
+      serial.focus();
+    });
+  </script>
+</body>
+</html>

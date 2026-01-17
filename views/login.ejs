@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laptop Grading System</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="hero bg-base-200 rounded-lg mb-8">
+      <div class="hero-content text-center">
+        <div class="max-w-md">
+          <h1 class="text-5xl font-bold">User Login</h1>
+          <p class="py-6">Sign in to access LGS.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-md mx-auto">
+      <% if (errorMessage) { %>
+        <div class="alert alert-error mb-4">
+          <span><%= errorMessage %></span>
+        </div>
+      <% } %>
+
+      <form action="/login" method="POST" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">User Name</span>
+          </label>
+          <input
+            type="text"
+            name="userName"
+            placeholder="User Name"
+            required
+            class="input input-bordered w-full"
+            value="<%= userName %>"
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            required
+            class="input input-bordered w-full"
+          />
+        </div>
+
+        <div class="form-control mt-6">
+          <button type="submit" class="btn btn-primary w-full">Sign In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+
+
