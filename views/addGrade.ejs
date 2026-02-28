@@ -1,217 +1,312 @@
-<!--
-  Laptop Grading System (LGS)
-  Developed by: Hiran Tiago Lins Borba
-  Year: 2026
-  History:
-  - 0.1 (2026-01-17) Beta release
--->
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="winter">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Unit - Laptop Grading</title>
+  <title>New Grade - LGS System</title>
   <link rel="stylesheet" href="/css/main.css">
 </head>
-<body>
+
+<body class="bg-base-100 min-h-screen">
   <%- include('partials/navbar') %>
 
-  <div class="container mx-auto px-4 py-8">
-    <div class="hero bg-base-200 rounded-lg mb-6">
-      <div class="hero-content text-center">
-        <div class="max-w-3xl">
-          <h1 class="text-4xl font-bold">New Unit</h1>
-          <p class="py-2">Scan serial → fill fields → observations → save.</p>
-          <% if (project) { %>
-            <p class="text-sm opacity-80">
-              Project: <b><%= project.projectName %></b> — <%= project.deviceType %> (<%= project.status %>)
-            </p>
-          <% } %>
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-3xl font-black tracking-tight">Grade System</h1>
+          <p class="opacity-60">Record refurbishing specs and condition</p>
         </div>
+        <a href="/grades" class="btn btn-ghost btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          View Recent History
+        </a>
       </div>
-    </div>
 
-    <% if (errorMessage) { %>
-      <div class="alert alert-error mb-4"><span><%= errorMessage %></span></div>
-    <% } %>
-
-    <% if (successMessage) { %>
-      <div class="alert alert-success mb-4"><span><%= successMessage %></span></div>
-    <% } %>
-
-    <form action="/grades/new" method="POST" class="space-y-4 max-w-4xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="form-control">
-          <label class="label"><span class="label-text">Preset (optional)</span></label>
-          <select id="presetId" name="presetId" class="select select-bordered w-full">
-            <option value="">No preset</option>
-            <% presets.forEach(p => { %>
-              <option
-                value="<%= p.id %>"
-                data-brand="<%= p.brand %>"
-                data-model="<%= p.model %>"
-                data-cpu="<%= p.defaultCpu %>"
-                data-ram="<%= p.defaultRamGb %>"
-                data-ssd="<%= p.defaultSsdGb %>"
-                data-touch="<%= p.touchDefault || 'NO_TOUCH' %>"
-                data-observations="<%= p.defaultObservations || '' %>"
-                <%= String(form.presetId || '') === String(p.id) ? 'selected' : '' %>
-              >
-                <%= p.brand %> <%= p.model %> — <%= p.presetLabel %>
+      <!-- Order Selection -->
+      <div
+        class="bg-base-200 border border-base-300 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center shadow-sm">
+        <label class="label hidden md:block"><span class="label-text font-bold text-base">Current Order:</span></label>
+        <div class="w-full md:w-1/2">
+          <select id="orderSelect" class="select select-bordered w-full font-bold text-primary"
+            onchange="window.location.href='/grades/new?orderId=' + this.value;">
+            <option value="" disabled <%=!orderId ? 'selected' : '' %>>-- Select an Order to start --</option>
+            <% orders.forEach(o=> { %>
+              <option value="<%= o.id %>" <%=String(orderId)===String(o.id) ? 'selected' : '' %>>
+                <%= o.name ? o.name : '' %>
+                  <%= o.orderId ? `[${o.orderId}]` : '' %>
               </option>
-            <% }); %>
+              <% }) %>
           </select>
         </div>
+        <div class="text-xs opacity-60">Select an existing order to associate grades.</div>
+      </div>
 
-        <div class="form-control">
-          <label class="label"><span class="label-text">Serial Number</span></label>
-          <input
-            id="serialNumber"
-            type="text"
-            name="serialNumber"
-            required
-            class="input input-bordered w-full"
-            placeholder="Scan or type serial"
-            value="<%= form.serialNumber || '' %>"
-          />
+      <% if (errorMessage) { %>
+        <div class="alert alert-error mb-6 rounded-xl shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>
+            <%= errorMessage %>
+          </span>
         </div>
-
-        <div class="form-control">
-          <label class="label"><span class="label-text">Brand</span></label>
-          <input id="brand" type="text" name="brand" class="input input-bordered w-full" value="<%= form.brand || '' %>" />
-        </div>
-
-        <div class="form-control">
-          <label class="label"><span class="label-text">Model</span></label>
-          <input id="model" type="text" name="model" class="input input-bordered w-full" value="<%= form.model || '' %>" />
-        </div>
-
-        <div class="form-control">
-          <label class="label"><span class="label-text">CPU</span></label>
-          <input id="cpu" type="text" name="cpu" class="input input-bordered w-full" value="<%= form.cpu || '' %>" />
-        </div>
-
-        <div class="form-control">
-          <label class="label"><span class="label-text">RAM (GB)</span></label>
-          <input id="ramGb" type="number" name="ramGb" class="input input-bordered w-full" value="<%= form.ramGb || '' %>" />
-        </div>
-
-        <div class="form-control">
-          <label class="label"><span class="label-text">SSD (GB)</span></label>
-          <input id="ssdGb" type="number" name="ssdGb" class="input input-bordered w-full" value="<%= form.ssdGb || '' %>" />
-        </div>
-
-        <div class="form-control">
-          <label class="label"><span class="label-text">Touchscreen</span></label>
-          <select id="touchStatus" name="touchStatus" class="select select-bordered w-full">
-            <option value="NO_TOUCH" <%= (form.touchStatus === 'NO_TOUCH' || !form.touchStatus) ? 'selected' : '' %>>NO_TOUCH</option>
-            <option value="TOUCH" <%= (form.touchStatus === 'TOUCH') ? 'selected' : '' %>>TOUCH</option>
-            <option value="BROKEN" <%= (form.touchStatus === 'BROKEN') ? 'selected' : '' %>>BROKEN</option>
-          </select>
-        </div>
-
-        <% if (project && project.deviceType === 'LAPTOP') { %>
-          <div class="form-control">
-            <label class="label"><span class="label-text">Battery Health (%)</span></label>
-            <input
-              id="batteryHealthPercent"
-              type="number"
-              name="batteryHealthPercent"
-              min="0"
-              max="100"
-              class="input input-bordered w-full"
-              placeholder="0 - 100"
-              value="<%= form.batteryHealthPercent || '' %>"
-            />
-          </div>
         <% } %>
 
-        <div class="form-control md:col-span-2">
-          <label class="label"><span class="label-text font-bold">OBSERVATIONS</span></label>
-          <textarea
-            id="observations"
-            name="observations"
-            class="textarea textarea-bordered h-32"
-            placeholder="broken screen, scratches, missing keys..."
-            required
-          ><%= form.observations || '' %></textarea>
-        </div>
-      </div>
+          <% if (successMessage) { %>
+            <div class="alert alert-success mb-6 rounded-xl shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                <%= successMessage %>
+              </span>
+            </div>
+            <% } %>
 
-      <div class="form-control mt-6 flex flex-wrap gap-3">
-        <button type="submit" class="btn btn-primary">Save Unit</button>
-        <button type="button" id="createPresetBtn" class="btn btn-outline">Create preset from current fields</button>
-        <a href="/grades" class="btn btn-ghost">View Units</a>
-      </div>
-    </form>
+              <form action="/grades/new" method="POST"
+                class="grid grid-cols-1 lg:grid-cols-3 gap-8 <%= !orderId ? 'opacity-50 pointer-events-none blur-sm transition-all duration-300' : '' %>">
+                <input type="hidden" name="orderId" value="<%= orderId || '' %>">
+                <div class="lg:col-span-2 space-y-6">
+                  <!-- Configuration Card -->
+                  <div class="card bg-white border border-base-200 shadow-sm overflow-visible relative">
+                    <% if (!orderId) { %>
+                      <div class="absolute inset-0 z-10 flex items-center justify-center">
+                        <span class="badge badge-lg badge-neutral text-lg font-bold p-4 shadow-xl">Select an Order
+                          First</span>
+                      </div>
+                      <% } %>
+                        <div class="card-body">
+                          <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Device Configuration
+                          </h2>
 
-    <form id="createPresetForm" action="/presets/from-unit" method="POST" class="hidden">
-      <input type="hidden" name="deviceType" value="<%= project ? project.deviceType : 'LAPTOP' %>" />
-      <input type="hidden" name="brand" />
-      <input type="hidden" name="model" />
-      <input type="hidden" name="cpu" />
-      <input type="hidden" name="ramGb" />
-      <input type="hidden" name="ssdGb" />
-      <input type="hidden" name="touchStatus" />
-      <input type="hidden" name="observations" />
-    </form>
-  </div>
+                          <div class="form-control mb-6">
+                            <label class="label"><span class="label-text font-bold">Select Model Preset</span></label>
+                            <select id="presetId" name="presetId" required
+                              class="select select-bordered w-full select-lg text-lg">
+                              <option value="" disabled <%=!presetId ? 'selected' : '' %>>Choose a configuration...
+                              </option>
+                              <% presets.forEach(p=> { %>
+                                <option value="<%= p.id %>" <%=String(presetId)===String(p.id) ? 'selected' : '' %>
+                                  data-brand="<%= p.brand %>" data-model="<%= p.model %>"
+                                      data-cpu="<%= p.defaultCpu %>" data-ram="<%= p.defaultRamGb %>"
+                                          data-ssd="<%= p.defaultSsdGb %>"
+                                            data-touch="<%= p.defaultTouchscreen ? 'true' : 'false' %>">
+                                              <%= p.brand %>
+                                                <%= p.model %>
+                                                  <%= p.observations ? `- ${p.observations}` : '' %>
+                                </option>
+                                <% }); %>
+                            </select>
+                          </div>
 
-  <script>
-    const presetSelect = document.getElementById("presetId");
-    const brand = document.getElementById("brand");
-    const model = document.getElementById("model");
-    const cpu = document.getElementById("cpu");
-    const ramGb = document.getElementById("ramGb");
-    const ssdGb = document.getElementById("ssdGb");
-    const touchStatus = document.getElementById("touchStatus");
-    const observations = document.getElementById("observations");
-    const serial = document.getElementById("serialNumber");
-    const createPresetBtn = document.getElementById("createPresetBtn");
-    const createPresetForm = document.getElementById("createPresetForm");
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">CPU Model</span></label>
+                              <input id="cpu" type="text" name="cpu" class="input input-bordered w-full"
+                                value="<%= form.cpu || '' %>" placeholder="e.g. Core i7-1185G7" />
+                            </div>
 
-    presetSelect.addEventListener("change", () => {
-      const opt = presetSelect.options[presetSelect.selectedIndex];
-      if (!opt || !opt.value) return;
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">RAM (GB)</span></label>
+                              <div class="join w-full">
+                                <input id="ramGb" type="number" name="ramGb"
+                                  class="input input-bordered w-full join-item" value="<%= form.ramGb || '' %>" />
+                                <span class="btn btn-disabled join-item no-animation">GB</span>
+                              </div>
+                            </div>
 
-      brand.value = opt.dataset.brand || "";
-      model.value = opt.dataset.model || "";
-      cpu.value = opt.dataset.cpu || "";
-      ramGb.value = opt.dataset.ram || "";
-      ssdGb.value = opt.dataset.ssd || "";
-      touchStatus.value = opt.dataset.touch || "NO_TOUCH";
-      if (!observations.value) observations.value = opt.dataset.observations || "";
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">Storage SSD (GB)</span></label>
+                              <div class="join w-full">
+                                <input id="ssdGb" type="number" name="ssdGb"
+                                  class="input input-bordered w-full join-item" value="<%= form.ssdGb || '' %>" />
+                                <span class="btn btn-disabled join-item no-animation">GB</span>
+                              </div>
+                            </div>
 
-      serial.focus();
-      serial.select();
-    });
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">Touchscreen Support</span></label>
+                              <label
+                                class="label cursor-pointer justify-start gap-4 h-full border border-base-200 rounded-lg px-4">
+                                <input id="touchscreen" type="checkbox" name="touchscreen"
+                                  class="checkbox checkbox-primary" <%=(form.touchscreen==='on' ||
+                                  form.touchscreen===true) ? 'checked' : '' %> />
+                                <span class="label-text">Enable Touchscreen</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                  </div>
 
-    createPresetBtn.addEventListener("click", () => {
-      const requiredFields = [brand.value, model.value, cpu.value, ramGb.value, ssdGb.value];
-      if (requiredFields.some(v => !String(v).trim())) {
-        alert("Fill brand, model, cpu, ram and ssd before creating preset.");
-        return;
-      }
+                  <!-- Notes Card -->
+                  <div class="card bg-white border border-base-200 shadow-sm">
+                    <div class="card-body">
+                      <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Observations</h2>
+                      <div class="form-control">
+                        <label class="label"><span class="label-text">Notes & Cosmetic Condition</span></label>
+                        <textarea id="notes" name="notes" class="textarea textarea-bordered h-32 focus:textarea-primary"
+                          placeholder="List any defects, scratches, or missing components..."><%= form.notes || '' %></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-      createPresetForm.querySelector("input[name='brand']").value = brand.value.trim();
-      createPresetForm.querySelector("input[name='model']").value = model.value.trim();
-      createPresetForm.querySelector("input[name='cpu']").value = cpu.value.trim();
-      createPresetForm.querySelector("input[name='ramGb']").value = ramGb.value;
-      createPresetForm.querySelector("input[name='ssdGb']").value = ssdGb.value;
-      createPresetForm.querySelector("input[name='touchStatus']").value = touchStatus.value;
-      createPresetForm.querySelector("input[name='observations']").value = observations.value;
+                <div class="space-y-6">
+                  <!-- Identifying Metadata Card -->
+                  <div class="card bg-primary text-primary-content shadow-xl sticky top-8">
+                    <div class="card-body">
+                      <h2 class="card-title text-sm uppercase tracking-widest opacity-80 mb-4">Unit Identification</h2>
 
-      createPresetForm.submit();
-    });
+                      <div class="form-control mb-4">
+                        <label class="label"><span class="label-text text-primary-content font-bold">Serial
+                            Number</span></label>
+                        <input id="serialNumber" type="text" name="serialNumber" required autofocus
+                          class="input input-bordered bg-white text-base-content w-full font-mono text-lg focus:outline-accent"
+                          placeholder="Scan unit serial..." value="<%= form.serialNumber || '' %>" />
+                      </div>
 
-    window.addEventListener("load", () => {
+                      <div class="form-control mb-8">
+                        <label class="label"><span class="label-text text-primary-content font-bold">Battery Health
+                            %</span></label>
+                        <div class="join w-full bg-white rounded-lg">
+                          <input id="batteryHealthPercent" type="number" name="batteryHealthPercent" required min="0"
+                            max="100" class="input input-bordered text-base-content w-full join-item"
+                            placeholder="0 - 100" value="<%= form.batteryHealthPercent || '' %>" />
+                          <span class="btn join-item bg-base-200 text-base-content border-l-0">%</span>
+                        </div>
+                      </div>
+
+                      <div class="card-actions flex-col gap-3">
+                        <button type="submit" class="btn btn-accent btn-block shadow-lg">
+                          Add Unit to order
+                        </button>
+                        <button type="reset" class="btn btn-ghost btn-block btn-sm opacity-60">
+                          Clear Form
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+
+              <!-- Scanned Units List (Order Context) -->
+              <% if (orderId && orderGrades.length> 0) { %>
+                <div class="mt-12 bg-base-100 rounded-3xl shadow-xl border border-base-200 overflow-hidden">
+                  <div class="bg-primary text-primary-content px-6 py-4 flex items-center justify-between">
+                    <h3 class="font-bold text-lg">
+                      <%= orderGrades.length %> Units Recorded
+                    </h3>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="table table-zebra table-sm">
+                      <thead class="bg-base-200 text-base-content/70 text-xs">
+                        <tr>
+                          <th class="w-12 text-center">#</th>
+                          <th class="font-mono">Serial Number</th>
+                          <th>Preset</th>
+                          <th>RAM</th>
+                          <th>SSD</th>
+                          <th>Battery</th>
+                          <th class="text-center">Touch</th>
+                          <th>Observations</th>
+                        </tr>
+                      </thead>
+                      <tbody class="text-sm">
+                        <% orderGrades.forEach((g, index)=> { %>
+                          <tr class="hover">
+                            <td class="text-center font-bold opacity-50">
+                              <%= index + 1 %>
+                            </td>
+                            <td class="font-mono font-bold">
+                              <%= g.serialNumber %>
+                            </td>
+                            <td>
+                              <% if (g.ModelPreset) { %>
+                                <div class="font-semibold">
+                                  <%= g.ModelPreset.brand %>
+                                    <%= g.ModelPreset.model %>
+                                </div>
+                                <% } else { %>
+                                  <span class="opacity-50 italic">None</span>
+                                  <% } %>
+                            </td>
+                            <td>
+                              <%= g.ramGb %> GB
+                            </td>
+                            <td>
+                              <%= g.ssdGb ? g.ssdGb + ' GB' : '--' %>
+                            </td>
+                            <td>
+                              <div
+                                class="badge <%= g.batteryHealthPercent > 80 ? 'badge-success badge-outline' : (g.batteryHealthPercent > 50 ? 'badge-warning badge-outline' : 'badge-error badge-outline') %> badge-sm">
+                                <%= g.batteryHealthPercent %>%
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <div
+                                class="w-3 h-3 rounded-full mx-auto <%= g.touchscreen ? 'bg-success' : 'bg-error opacity-40' %>">
+                              </div>
+                            </td>
+                            <td class="text-xs max-w-xs truncate" title="<%= g.notes %>">
+                              <%= g.notes || '--' %>
+                            </td>
+                          </tr>
+                          <% }); %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <% } else if (orderId) { %>
+                  <div class="mt-8 text-center py-12 bg-base-200/50 rounded-2xl border border-base-200 border-dashed">
+                    <p class="opacity-50 italic">No units evaluated for this order yet.</p>
+                  </div>
+                  <% } %>
+    </div>
+
+    <script>
+      const presetSelect = document.getElementById("presetId");
+      const cpu = document.getElementById("cpu");
+      const ramGb = document.getElementById("ramGb");
+      const ssdGb = document.getElementById("ssdGb");
+      const touchscreen = document.getElementById("touchscreen");
+      const serial = document.getElementById("serialNumber");
+
+      presetSelect.addEventListener("change", () => {
+        const opt = presetSelect.options[presetSelect.selectedIndex];
+        if (!opt) return;
+
+        cpu.value = opt.dataset.cpu || "";
+        ramGb.value = opt.dataset.ram || "";
+        ssdGb.value = opt.dataset.ssd || "";
+        touchscreen.checked = (opt.dataset.touch === "true");
+
+        serial.focus();
+        serial.select();
+      });
+
+      // Initial trigger if preset is pre-selected (sticky from previous submit)
       if (presetSelect.value) {
-        const event = new Event('change');
-        presetSelect.dispatchEvent(event);
+        const ev = new Event("change");
+        presetSelect.dispatchEvent(ev);
+        // Do not focus on preset load if we just submitted, user likely wants serial autofocus
       }
-      serial.focus();
-    });
-  </script>
+
+      // Auto-focus logic
+      window.addEventListener("load", () => {
+        if (serial) {
+          serial.focus();
+        }
+      });
+    </script>
 </body>
+
 </html>

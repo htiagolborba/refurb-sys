@@ -1,25 +1,38 @@
-<!--
-  Laptop Grading System (LGS)
-  Developed by: Hiran Tiago Lins Borba
-  Year: 2026
-  History:
-  - 0.1 (2026-01-17) Beta release
--->
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="winter">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>500</title>
+  <title>Server Error - LGS System</title>
   <link rel="stylesheet" href="/css/main.css">
 </head>
-<body>
+
+<body class="bg-base-200 min-h-screen">
   <%- include('partials/navbar') %>
-  <div class="container mx-auto px-4 py-8">
-    <div class="alert alert-error">
-      <span><%= message %></span>
+
+    <div class="container mx-auto px-4 py-20 text-center">
+      <div class="max-w-md mx-auto">
+        <div class="text-9xl font-black text-error opacity-10 mb-[-3rem]">500</div>
+        <h1 class="text-4xl font-extrabold mb-4 relative">System Hiccup</h1>
+        <p class="opacity-60 text-lg mb-4">Something went wrong on our end. Our technicians have been notified (maybe).
+        </p>
+
+        <div class="alert alert-error mb-8 rounded-xl font-mono text-xs text-left">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Error: <%= message || 'Unexpected Internal Error' %></span>
+        </div>
+
+        <div class="flex justify-center gap-4">
+          <a href="/" class="btn btn-primary rounded-xl px-8">Return Home</a>
+          <a href="mailto:support@example.com" class="btn btn-ghost rounded-xl">Contact Support</a>
+        </div>
+      </div>
     </div>
-  </div>
 </body>
+
 </html>

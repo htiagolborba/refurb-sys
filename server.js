@@ -1,11 +1,3 @@
-/*
- * Laptop Grading System (LGS)
- * Developed by: Hiran Tiago Lins Borba
- * Year: 2026
- * History:
- * - 0.1 (2026-01-17) Beta release
- */
-
 const path = require("path");
 const express = require("express");
 const clientSessions = require("client-sessions");
@@ -35,28 +27,6 @@ app.use(
 // make session available to views
 app.use((req, res, next) => {
   res.locals.session = req.session;
-  next();
-});
-
-// current project for navbar/status
-app.use(async (req, res, next) => {
-  if (!req.session.currentProjectId) {
-    res.locals.currentProject = null;
-    return next();
-  }
-
-  try {
-    const project = await lgs.getProjectById(req.session.currentProjectId);
-    if (!project) {
-      req.session.currentProjectId = null;
-      res.locals.currentProject = null;
-    } else {
-      res.locals.currentProject = project;
-    }
-  } catch (err) {
-    res.locals.currentProject = null;
-  }
-
   next();
 });
 
@@ -109,99 +79,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ===== Projects (ADMIN + TECH) =====
-app.get("/projects", ensureLogin, async (req, res) => {
-  try {
-    const projects = await lgs.listProjects();
-    res.render("projects", {
-      projects,
-      message: req.query.msg || ""
-    });
-  } catch (err) {
-    res.status(500).render("500", { message: `Unable to load projects: ${err.message || err}` });
-  }
-});
-
-app.get("/projects/new", ensureAdmin, (req, res) => {
-  res.render("addProject", { errorMessage: null, form: {} });
-});
-
-app.post("/projects/new", ensureAdmin, async (req, res) => {
-  try {
-    await lgs.createProject(req.session.user, req.body);
-    res.redirect("/projects?msg=Project created");
-  } catch (err) {
-    res.status(400).render("addProject", { errorMessage: err.message || String(err), form: req.body });
-  }
-});
-
-app.get("/projects/:id/open", ensureLogin, async (req, res) => {
-  try {
-    const project = await lgs.getProjectById(req.params.id);
-    if (!project) {
-      return res.redirect("/projects?msg=Project not found");
-    }
-    if (project.status !== "OPEN") {
-      return res.redirect("/projects?msg=Project is closed");
-    }
-    req.session.currentProjectId = project.id;
-    res.redirect("/grades/new");
-  } catch (err) {
-    res.status(500).render("500", { message: `Unable to open project: ${err.message || err}` });
-  }
-});
-
-app.get("/projects/:id/close", ensureAdmin, async (req, res) => {
-  try {
-    await lgs.setProjectStatus(req.params.id, "CLOSED");
-    if (String(req.session.currentProjectId) === String(req.params.id)) {
-      req.session.currentProjectId = null;
-    }
-    res.redirect("/projects?msg=Project closed");
-  } catch (err) {
-    res.status(500).render("500", { message: `Unable to close project: ${err.message || err}` });
-  }
-});
-
-app.get("/projects/:id/export.csv", ensureAdmin, async (req, res) => {
-  try {
-    const project = await lgs.getProjectById(req.params.id);
-    if (!project) {
-      return res.status(404).render("500", { message: "Project not found." });
-    }
-
-    const grades = await lgs.listGradesForExport(req.params.id);
-    const header = ["SERIAL", "BRAND", "MODEL", "CPU", "SSD", "MEMORY", "OBSERVATIONS", "TOUCHSCREEN", "TECHNICIAN", "DATE"];
-    const rows = grades.map(g => [
-      g.serialNumber,
-      g.brand,
-      g.model,
-      g.cpu,
-      g.ssdGb,
-      g.ramGb,
-      g.observations,
-      g.touchStatus,
-      g.User ? g.User.userName : "",
-      new Date(g.createdAt).toISOString()
-    ]);
-
-    const csvLines = [header, ...rows]
-      .map(row => row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", `attachment; filename=project-${project.id}.csv`);
-    res.send(csvLines);
-  } catch (err) {
-    res.status(500).render("500", { message: `Unable to export CSV: ${err.message || err}` });
-  }
-});
-
-app.get("/projects/:id/export.xlsx", ensureAdmin, async (req, res) => {
-  res.status(501).render("500", { message: "XLSX export not implemented yet." });
-});
-
-// ===== Presets (ADMIN + TECH) =====
+// ===== Presets (TECH + ADMIN) =====
 app.get("/presets", ensureLogin, async (req, res) => {
   try {
     const filters = {
@@ -210,8 +88,8 @@ app.get("/presets", ensureLogin, async (req, res) => {
       model: req.query.model || ""
     };
 
-    const allPresets = await lgs.listPresetsDetailed({}, false);
-    const presets = await lgs.listPresetsDetailed(filters, false);
+    const allPresets = await lgs.listPresets(false);
+    const presets = await lgs.listPresetsFiltered(filters, false);
 
     const deviceTypes = [...new Set(allPresets.map(p => p.deviceType || "LAPTOP"))].sort();
     const brands = [...new Set(allPresets.map(p => p.brand).filter(Boolean))].sort();
@@ -223,64 +101,96 @@ app.get("/presets", ensureLogin, async (req, res) => {
   }
 });
 
-app.get("/presets/add", ensureLogin, (req, res) => {
+app.get("/presets/add", ensureAdmin, (req, res) => {
   res.render("addPreset", { errorMessage: null, form: {} });
 });
 
-app.post("/presets/add", ensureLogin, async (req, res) => {
+app.post("/presets/add", ensureAdmin, async (req, res) => {
   try {
-    await lgs.createPreset(req.session.user, req.body);
+    await lgs.createPreset(req.body);
     res.redirect("/presets");
   } catch (err) {
     res.status(400).render("addPreset", { errorMessage: err.message || String(err), form: req.body });
   }
 });
 
-app.post("/presets/from-unit", ensureLogin, async (req, res) => {
+app.get("/presets/edit/:id", ensureAdmin, async (req, res) => {
   try {
-    const preset = await lgs.createPresetFromUnit(req.session.user, req.body);
-    res.redirect(`/grades/new?presetId=${preset.id}&msg=Preset created`);
+    const preset = await lgs.getPreset(req.params.id);
+    if (!preset) return res.status(404).render("404");
+    res.render("editPreset", { preset, errorMessage: null });
   } catch (err) {
-    res.redirect(`/grades/new?msg=${encodeURIComponent(err.message || String(err))}`);
+    res.status(500).render("500", { message: `Unable to load edit preset page: ${err.message || err}` });
   }
 });
 
-app.get("/presets/deactivate/:id", ensureAdmin, async (req, res) => {
+app.post("/presets/edit/:id", ensureAdmin, async (req, res) => {
   try {
-    await lgs.setPresetActive(req.params.id, false);
+    await lgs.updatePreset(req.params.id, req.body);
     res.redirect("/presets");
   } catch (err) {
-    res.status(500).render("500", { message: `Unable to deactivate preset: ${err.message || err}` });
+    const preset = await lgs.getPreset(req.params.id);
+    res.status(400).render("editPreset", { preset, errorMessage: err.message || String(err) });
   }
 });
 
-app.get("/presets/activate/:id", ensureAdmin, async (req, res) => {
+app.post("/presets/delete/:id", ensureAdmin, async (req, res) => {
   try {
-    await lgs.setPresetActive(req.params.id, true);
+    const password = req.body.adminPassword || "";
+    // Re-authenticate to confirm it's actually the admin
+    const validUser = await lgs.authenticate(req.session.user.userName, password);
+    if (!validUser || validUser.role !== "ADMIN") {
+      return res.status(403).send("Invalid Admin Password");
+    }
+    await lgs.deletePreset(req.params.id);
     res.redirect("/presets");
   } catch (err) {
-    res.status(500).render("500", { message: `Unable to activate preset: ${err.message || err}` });
+    res.status(500).render("500", { message: `Unable to delete preset: ${err.message || err}` });
+  }
+});
+
+// ===== Orders (TECH + ADMIN) =====
+app.get("/orders/new", ensureLogin, (req, res) => {
+  res.render("newOrder", { errorMessage: null, form: {} });
+});
+
+app.post("/orders/new", ensureLogin, async (req, res) => {
+  try {
+    const name = (req.body.name || "").trim();
+    const orderIdStr = (req.body.orderId || "").trim();
+    if (!name && !orderIdStr) {
+      throw new Error("Must provide an Order ID or a Name for the order.");
+    }
+    const o = await lgs.createOrder(req.body);
+    // Redirect directly to grading with this order pre-selected
+    res.redirect(`/grades/new?orderId=${o.id}`);
+  } catch (err) {
+    res.status(400).render("newOrder", { errorMessage: err.message || String(err), form: req.body });
   }
 });
 
 // ===== Grades (TECH + ADMIN) =====
 app.get("/grades/new", ensureLogin, async (req, res) => {
   try {
-    const project = res.locals.currentProject;
-    if (!project) {
-      return res.redirect("/projects?msg=Select a project first");
-    }
-    if (project.status !== "OPEN") {
-      return res.redirect("/projects?msg=Selected project is closed");
+    const presets = await lgs.listPresetsFiltered({}, true); // fetch only active presets
+    const orders = await lgs.listOrders();
+    const orderId = req.query.orderId || null;
+    const presetId = req.query.presetId || null;
+    let orderGrades = [];
+
+    if (orderId) {
+      orderGrades = await lgs.listGradesByOrder(orderId);
     }
 
-    const presets = await lgs.listPresetsFiltered({ deviceType: project.deviceType }, true);
     res.render("addGrade", {
-      project,
       presets,
+      orders,
+      orderId,
+      presetId,
+      orderGrades,
       errorMessage: null,
-      successMessage: req.query.msg || null,
-      form: { presetId: req.query.presetId || "" }
+      successMessage: null,
+      form: {}
     });
   } catch (err) {
     res.status(500).render("500", { message: `Unable to load new grade page: ${err.message || err}` });
@@ -288,30 +198,31 @@ app.get("/grades/new", ensureLogin, async (req, res) => {
 });
 
 app.post("/grades/new", ensureLogin, async (req, res) => {
-  try {
-    const project = res.locals.currentProject;
-    if (!project) {
-      return res.redirect("/projects?msg=Select a project first");
-    }
-    if (project.status !== "OPEN") {
-      return res.redirect("/projects?msg=Selected project is closed");
-    }
+  const selectedOrderId = req.body.orderId;
+  const selectedPresetId = req.body.presetId;
 
-    await lgs.createGrade(req.session.user, req.body, project);
-    const presets = await lgs.listPresetsFiltered({ deviceType: project.deviceType }, true);
-    res.render("addGrade", {
-      project,
-      presets,
-      errorMessage: null,
-      successMessage: "Saved ✅",
-      form: { presetId: req.body.presetId || "" }
-    });
+  try {
+    if (!selectedOrderId) {
+      throw new Error("Please select an Order to start grading.");
+    }
+    await lgs.createGrade(req.session.user, req.body);
+
+    // Redirect via GET so we don't resubmit, keeping the same order and preset
+    const redirectUrl = `/grades/new?orderId=${selectedOrderId}${selectedPresetId ? `&presetId=${selectedPresetId}` : ""}`;
+    res.redirect(redirectUrl);
   } catch (err) {
-    const project = res.locals.currentProject;
-    const presets = project ? await lgs.listPresetsFiltered({ deviceType: project.deviceType }, true) : [];
-    res.status(400).render("addGrade", {
-      project,
+    const presets = await lgs.listPresetsFiltered({}, true);
+    const orders = await lgs.listOrders();
+    let orderGrades = [];
+    if (selectedOrderId) {
+      orderGrades = await lgs.listGradesByOrder(selectedOrderId);
+    }
+    res.render("addGrade", {
       presets,
+      orders,
+      orderId: selectedOrderId,
+      presetId: selectedPresetId,
+      orderGrades,
       errorMessage: err.message || String(err),
       successMessage: null,
       form: req.body
@@ -324,40 +235,22 @@ app.get("/grades", ensureLogin, async (req, res) => {
     let grades = [];
     let presets = [];
     let users = [];
-    let projects = [];
-    let deviceTypes = [];
-    let models = [];
-    const filters = {
+    let filters = {
       technician: req.query.technician || "",
       fromDate: req.query.fromDate || "",
       toDate: req.query.toDate || "",
-      presetId: req.query.presetId || "",
-      projectId: req.query.projectId || "",
-      deviceType: req.query.deviceType || "",
-      model: req.query.model || "",
-      onlyMineToday: req.query.onlyMineToday === "1"
+      presetId: req.query.presetId || ""
     };
 
     if (req.session.user.role === "ADMIN") {
       presets = await lgs.listPresets(false);
       users = await lgs.listUsers();
-      projects = await lgs.listProjects();
-      deviceTypes = [...new Set(projects.map(p => p.deviceType))].sort();
-      models = [...new Set(presets.map(p => p.model).filter(Boolean))].sort();
       grades = await lgs.listGradesAdminFiltered(filters);
     } else {
-      const project = res.locals.currentProject;
-      if (!project) {
-        return res.redirect("/projects?msg=Select a project first");
-      }
-
-      grades = await lgs.listGradesForProject(project.id, {
-        onlyMineToday: filters.onlyMineToday,
-        userId: req.session.user.id
-      });
+      grades = await lgs.listGradesForUser(req.session.user);
     }
 
-    res.render("grades", { grades, presets, users, projects, deviceTypes, models, filters });
+    res.render("grades", { grades, presets, users, filters });
   } catch (err) {
     res.status(500).render("500", { message: `Unable to load grades: ${err.message || err}` });
   }

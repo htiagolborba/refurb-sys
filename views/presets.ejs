@@ -1,125 +1,164 @@
-<!--
-  Laptop Grading System (LGS)
-  Developed by: Hiran Tiago Lins Borba
-  Year: 2026
-  History:
-  - 0.1 (2026-01-17) Beta release
--->
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="winter">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Presets - Laptop Grading</title>
+  <title>Presets - LGS System</title>
   <link rel="stylesheet" href="/css/main.css">
 </head>
-<body>
+
+<body class="bg-base-100 min-h-screen">
   <%- include('partials/navbar') %>
 
-  <div class="container mx-auto px-4 py-8">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-3xl font-bold">Model Presets</h1>
-      <a href="/presets/add" class="btn btn-primary btn-sm">Add Preset</a>
-    </div>
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-black tracking-tight">Standard Presets</h1>
+          <p class="opacity-60 text-sm">Manage configuration templates for efficient grading</p>
+        </div>
+        <a href="/presets/add" class="btn btn-primary rounded-xl shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          New Preset
+        </a>
+      </div>
 
-    <div class="card bg-base-200 mb-6">
-      <div class="card-body">
-        <h2 class="card-title text-lg">Filters</h2>
-
-        <form method="GET" action="/presets" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="form-control">
-            <label class="label"><span class="label-text">Device Type</span></label>
-            <select name="deviceType" class="select select-bordered">
-              <option value="">(all)</option>
-              <% deviceTypes.forEach(t => { %>
-                <option value="<%= t %>" <%= (filters.deviceType === t) ? "selected" : "" %>><%= t %></option>
-              <% }); %>
-            </select>
+      <div class="card bg-white border border-base-200 shadow-sm mb-10">
+        <div class="card-body p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-40" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <h2 class="font-bold text-sm uppercase tracking-widest opacity-60">Catalogue Filters</h2>
           </div>
 
-          <div class="form-control">
-            <label class="label"><span class="label-text">Brand</span></label>
-            <select name="brand" class="select select-bordered">
-              <option value="">(all)</option>
-              <% brands.forEach(b => { %>
-                <option value="<%= b %>" <%= (filters.brand === b) ? "selected" : "" %>><%= b %></option>
-              <% }); %>
-            </select>
-          </div>
+          <form method="GET" action="/presets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-semibold">Type</span></label>
+              <select name="deviceType" class="select select-bordered select-sm">
+                <option value="">All Types</option>
+                <% deviceTypes.forEach(t=> { %>
+                  <option value="<%= t %>" <%=(filters.deviceType===t) ? "selected" : "" %>><%= t %>
+                  </option>
+                  <% }); %>
+              </select>
+            </div>
 
-          <div class="form-control">
-            <label class="label"><span class="label-text">Model</span></label>
-            <select name="model" class="select select-bordered">
-              <option value="">(all)</option>
-              <% models.forEach(m => { %>
-                <option value="<%= m %>" <%= (filters.model === m) ? "selected" : "" %>><%= m %></option>
-              <% }); %>
-            </select>
-          </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-semibold">Brand</span></label>
+              <select name="brand" class="select select-bordered select-sm">
+                <option value="">All Manufacturers</option>
+                <% brands.forEach(b=> { %>
+                  <option value="<%= b %>" <%=(filters.brand===b) ? "selected" : "" %>><%= b %>
+                  </option>
+                  <% }); %>
+              </select>
+            </div>
 
-          <div class="md:col-span-3 flex gap-2">
-            <button class="btn btn-sm btn-primary" type="submit">Apply</button>
-            <a class="btn btn-sm btn-ghost" href="/presets">Reset</a>
-          </div>
-        </form>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-semibold">Model Family</span></label>
+              <select name="model" class="select select-bordered select-sm">
+                <option value="">All Models</option>
+                <% models.forEach(m=> { %>
+                  <option value="<%= m %>" <%=(filters.model===m) ? "selected" : "" %>><%= m %>
+                  </option>
+                  <% }); %>
+              </select>
+            </div>
+
+            <div class="flex items-end gap-2">
+              <button class="btn btn-sm btn-primary px-6 rounded-lg" type="submit">Apply Filters</button>
+              <a class="btn btn-sm btn-ghost rounded-lg" href="/presets">Clear</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card bg-white border border-base-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full table-md">
+            <thead class="bg-base-50 border-b border-base-200">
+              <tr class="text-xs uppercase tracking-widest opacity-70">
+                <th>Type</th>
+                <th>Hardware Definition</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% presets.forEach(p=> { %>
+                <tr class="hover">
+                  <td>
+                    <div class="badge badge-outline badge-sm font-mono opacity-60">
+                      <%= p.deviceType || "LAPTOP" %>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-base">
+                        <%= p.brand %>
+                          <%= p.model %>
+                      </span>
+                      <% if (p.observations) { %>
+                        <span class="text-xs text-primary font-semibold tracking-wide">
+                          <%= p.observations %>
+                        </span>
+                        <% } %>
+                          <span class="text-[11px] opacity-60 mt-1">
+                            <%= p.defaultCpu %> • <%= p.defaultRamGb %>GB RAM <%= p.defaultSsdGb ? '• ' + p.defaultSsdGb
+                                  + 'GB SSD' : '' %>
+                                  <%= p.defaultTouchscreen ? '• Touch' : '' %>
+                          </span>
+                    </div>
+                  </td>
+                  <td class="text-right">
+                    <% if (session.user && session.user.role==='ADMIN' ) { %>
+                      <a class="btn btn-xs btn-outline btn-primary rounded-lg mr-2"
+                        href="/presets/edit/<%= p.id %>">Edit</a>
+                      <button class="btn btn-xs btn-outline btn-error rounded-lg"
+                        onclick="document.getElementById('delete_modal_<%= p.id %>').showModal()">Delete</button>
+
+                      <!-- Delete Modal -->
+                      <dialog id="delete_modal_<%= p.id %>" class="modal">
+                        <div class="modal-box text-left">
+                          <h3 class="font-bold text-lg text-error">Delete Preset</h3>
+                          <p class="py-4 text-sm opacity-80">You are about to permanently delete <b>
+                              <%= p.brand %>
+                                <%= p.model %>
+                            </b>. To confirm, please enter your Admin password below.</p>
+                          <form method="POST" action="/presets/delete/<%= p.id %>">
+                            <input type="password" name="adminPassword" placeholder="Admin Password"
+                              class="input input-bordered w-full mb-4" required />
+                            <div class="modal-action">
+                              <button type="submit" class="btn btn-error text-white">Confirm Delete</button>
+                              <button type="button" class="btn btn-ghost"
+                                onclick="document.getElementById('delete_modal_<%= p.id %>').close()">Cancel</button>
+                            </div>
+                          </form>
+                        </div>
+                      </dialog>
+                      <% } else { %>
+                        <span class="text-xs italic opacity-30">—</span>
+                        <% } %>
+                  </td>
+                </tr>
+                <% }); %>
+
+                  <% if (!presets || presets.length===0) { %>
+                    <tr>
+                      <td colspan="4" class="text-center py-16 opacity-30 italic">No configurations defined in the
+                        catalogue.</td>
+                    </tr>
+                    <% } %>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-
-    <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Brand</th>
-            <th>Model</th>
-            <th>Label</th>
-            <th>CPU</th>
-            <th>RAM</th>
-            <th>SSD</th>
-            <th>Touch</th>
-            <th>Observations</th>
-            <th>Created By</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% presets.forEach(p => { %>
-            <tr>
-              <td><%= p.deviceType || "LAPTOP" %></td>
-              <td><%= p.brand %></td>
-              <td><%= p.model %></td>
-              <td class="font-semibold"><%= p.presetLabel %></td>
-              <td><%= p.defaultCpu %></td>
-              <td><%= p.defaultRamGb %>GB</td>
-              <td><%= p.defaultSsdGb %>GB</td>
-              <td><%= p.touchDefault || "NO_TOUCH" %></td>
-              <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                <%= p.defaultObservations || "" %>
-              </td>
-              <td><%= p.User ? p.User.userName : "-" %></td>
-              <td><%= p.active ? "Active" : "Disabled" %></td>
-              <td>
-                <% if (session && session.user && session.user.role === "ADMIN") { %>
-                  <% if (p.active) { %>
-                    <a class="btn btn-xs btn-warning" href="/presets/deactivate/<%= p.id %>">Deactivate</a>
-                  <% } else { %>
-                    <a class="btn btn-xs btn-success" href="/presets/activate/<%= p.id %>">Activate</a>
-                  <% } %>
-                <% } else { %>
-                  <span class="text-sm opacity-60">—</span>
-                <% } %>
-              </td>
-            </tr>
-          <% }); %>
-
-          <% if (!presets || presets.length === 0) { %>
-            <tr><td colspan="12">No presets yet.</td></tr>
-          <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
 </body>
+
 </html>

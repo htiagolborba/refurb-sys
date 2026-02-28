@@ -1,169 +1,183 @@
-<!--
-  Laptop Grading System (LGS)
-  Developed by: Hiran Tiago Lins Borba
-  Year: 2026
-  History:
-  - 0.1 (2026-01-17) Beta release
--->
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="winter">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Units - Laptop Grading</title>
+  <title>Grades - LGS System</title>
   <link rel="stylesheet" href="/css/main.css">
 </head>
-<body>
+
+<body class="bg-base-100 min-h-screen">
   <%- include('partials/navbar') %>
 
-  <div class="container mx-auto px-4 py-8">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-3xl font-bold">Units</h1>
-      <a href="/grades/new" class="btn btn-primary btn-sm">New Unit</a>
-    </div>
-
-    <% if (session && session.user && session.user.role === "ADMIN") { %>
-      <div class="card bg-base-200 mb-6">
-        <div class="card-body">
-          <h2 class="card-title text-lg">Admin Filters</h2>
-
-          <form method="GET" action="/grades" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div class="form-control">
-              <label class="label"><span class="label-text">Project</span></label>
-              <select name="projectId" class="select select-bordered">
-                <option value="">(all)</option>
-                <% (projects || []).forEach(p => { %>
-                  <option value="<%= p.id %>" <%= (String(filters.projectId) === String(p.id)) ? "selected" : "" %> >
-                    <%= p.projectName %> (<%= p.deviceType %>) <%= p.status === 'CLOSED' ? '[closed]' : '' %>
-                  </option>
-                <% }); %>
-              </select>
-            </div>
-
-            <div class="form-control">
-              <label class="label"><span class="label-text">Device Type</span></label>
-              <select name="deviceType" class="select select-bordered">
-                <option value="">(all)</option>
-                <% (deviceTypes || []).forEach(t => { %>
-                  <option value="<%= t %>" <%= (filters.deviceType === t) ? "selected" : "" %> >
-                    <%= t %>
-                  </option>
-                <% }); %>
-              </select>
-            </div>
-
-            <div class="form-control">
-              <label class="label"><span class="label-text">Model</span></label>
-              <select name="model" class="select select-bordered">
-                <option value="">(all)</option>
-                <% (models || []).forEach(m => { %>
-                  <option value="<%= m %>" <%= (filters.model === m) ? "selected" : "" %> >
-                    <%= m %>
-                  </option>
-                <% }); %>
-              </select>
-            </div>
-
-            <div class="form-control">
-              <label class="label"><span class="label-text">Technician</span></label>
-              <select name="technician" class="select select-bordered">
-                <option value="">(all)</option>
-                <% (users || []).forEach(u => { %>
-                  <option value="<%= u.userName %>" <%= (filters.technician === u.userName) ? "selected" : "" %> >
-                    <%= u.userName %> (<%= u.role %>) <%= u.active ? "" : "[disabled]" %>
-                  </option>
-                <% }); %>
-              </select>
-            </div>
-
-            <div class="form-control">
-              <label class="label"><span class="label-text">Preset</span></label>
-              <select name="presetId" class="select select-bordered">
-                <option value="">(all)</option>
-                <% (presets || []).forEach(p => { %>
-                  <option value="<%= p.id %>" <%= (String(filters.presetId) === String(p.id)) ? "selected" : "" %> >
-                    <%= p.brand %> <%= p.model %> — <%= p.presetLabel %> <%= p.active ? "" : "[disabled]" %>
-                  </option>
-                <% }); %>
-              </select>
-            </div>
-
-            <div class="form-control">
-              <label class="label"><span class="label-text">From</span></label>
-              <input type="date" name="fromDate" class="input input-bordered" value="<%= filters.fromDate %>"/>
-            </div>
-
-            <div class="form-control">
-              <label class="label"><span class="label-text">To</span></label>
-              <input type="date" name="toDate" class="input input-bordered" value="<%= filters.toDate %>"/>
-            </div>
-
-            <div class="md:col-span-4 flex gap-2">
-              <button class="btn btn-sm btn-primary" type="submit">Apply</button>
-              <a class="btn btn-sm btn-ghost" href="/grades">Reset</a>
-            </div>
-          </form>
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-black tracking-tight">Grading History</h1>
+          <p class="opacity-60 text-sm">Review recently processed units and inspection details</p>
         </div>
+        <a href="/grades/new" class="btn btn-primary rounded-xl shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          New Grade Entry
+        </a>
       </div>
-    <% } else { %>
-      <form method="GET" action="/grades" class="mb-4">
-        <label class="label cursor-pointer justify-start gap-3">
-          <input type="checkbox" name="onlyMineToday" value="1" class="checkbox" <%= filters.onlyMineToday ? 'checked' : '' %> />
-          <span class="label-text">Only what I added today</span>
-        </label>
-        <button class="btn btn-sm btn-primary" type="submit">Apply</button>
-      </form>
-    <% } %>
 
-    <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Project</th>
-            <th>Serial</th>
-            <th>Brand</th>
-            <th>Model</th>
-            <th>CPU</th>
-            <th>RAM</th>
-            <th>SSD</th>
-            <th>Touch</th>
-            <th>Observations</th>
-            <th>Technician</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% grades.forEach(g => { %>
-            <tr>
-              <td><%= new Date(g.createdAt).toLocaleString() %></td>
-              <td>
-                <% if (g.Project) { %>
-                  <%= g.Project.projectName %> (<%= g.Project.deviceType %>)
-                <% } else { %>
-                  -
-                <% } %>
-              </td>
-              <td class="font-semibold"><%= g.serialNumber %></td>
-              <td><%= g.brand || '-' %></td>
-              <td><%= g.model || '-' %></td>
-              <td><%= g.cpu %></td>
-              <td><%= g.ramGb %>GB</td>
-              <td><%= g.ssdGb %>GB</td>
-              <td><%= g.touchStatus || (g.touchscreen ? 'TOUCH' : 'NO_TOUCH') %></td>
-              <td style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                <%= g.observations || '' %>
-              </td>
-              <td><%= g.User ? g.User.userName : '-' %></td>
-            </tr>
-          <% }); %>
+      <% if (session && session.user && session.user.role==="ADMIN" ) { %>
+        <div class="card bg-white border border-base-200 shadow-sm mb-10 overflow-visible">
+          <div class="card-body p-6">
+            <div class="flex items-center gap-2 mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-40" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <h2 class="font-bold text-sm uppercase tracking-widest opacity-60">Advanced Search & Filters</h2>
+            </div>
 
-          <% if (!grades || grades.length === 0) { %>
-            <tr><td colspan="11">No records found.</td></tr>
-          <% } %>
-        </tbody>
-      </table>
+            <form method="GET" action="/grades" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Technician</span></label>
+                <select name="technician" class="select select-bordered select-sm">
+                  <option value="">All Personnel</option>
+                  <% users.forEach(u=> { %>
+                    <option value="<%= u.userName %>" <%=(filters.technician===u.userName) ? "selected" : "" %> >
+                      <%= u.userName %> (<%= u.role %>)
+                    </option>
+                    <% }); %>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Model Preset</span></label>
+                <select name="presetId" class="select select-bordered select-sm">
+                  <option value="">All Models</option>
+                  <% presets.forEach(p=> { %>
+                    <option value="<%= p.id %>" <%=(String(filters.presetId)===String(p.id)) ? "selected" : "" %> >
+                      <%= p.brand %>
+                        <%= p.model %>
+                          <%= p.observations ? '— ' + p.observations : '' %>
+                    </option>
+                    <% }); %>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">From Date</span></label>
+                <input type="date" name="fromDate" class="input input-bordered input-sm"
+                  value="<%= filters.fromDate %>" />
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">To Date</span></label>
+                <input type="date" name="toDate" class="input input-bordered input-sm" value="<%= filters.toDate %>" />
+              </div>
+
+              <div class="flex items-end gap-2 shrink-0">
+                <button class="btn btn-sm btn-primary px-6 rounded-lg" type="submit">Apply</button>
+                <a class="btn btn-sm btn-ghost rounded-lg" href="/grades">Reset</a>
+              </div>
+            </form>
+          </div>
+        </div>
+        <% } %>
+
+          <div class="card bg-white border border-base-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="table table-zebra w-full table-md">
+                <thead class="bg-base-50 border-b border-base-200">
+                  <tr class="text-xs uppercase tracking-tighter opacity-70">
+                    <th>Timestamp</th>
+                    <th>Serial Number</th>
+                    <th>Configuration</th>
+                    <th>Battery</th>
+                    <th>Author</th>
+                    <th>Observations</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% grades.forEach(g=> { %>
+                    <tr class="hover group">
+                      <td class="text-sm opacity-60">
+                        <div class="flex flex-col">
+                          <span>
+                            <%= new Date(g.createdAt).toLocaleDateString() %>
+                          </span>
+                          <span class="text-[10px] font-mono">
+                            <%= new Date(g.createdAt).toLocaleTimeString([], {hour: '2bit' , minute:'2bit'}) %>
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="font-mono font-bold bg-base-200 px-2 py-1 rounded text-sm tracking-widest">
+                          <%= g.serialNumber %>
+                        </span>
+                      </td>
+                      <td class="max-w-xs">
+                        <div class="flex flex-col">
+                          <span class="font-bold text-sm">
+                            <% if (g.ModelPreset) { %>
+                              <%= g.ModelPreset.brand %>
+                                <%= g.ModelPreset.model %>
+                                  <% } else { %>
+                                    Manual Entry
+                                    <% } %>
+                          </span>
+                          <span class="text-[11px] opacity-60">
+                            <%= g.cpu %> / <%= g.ramGb %>GB / <%= g.ssdGb %>GB <%= g.touchscreen ? '(Touch)' : '' %>
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <% let color="text-error" ; if (g.batteryHealthPercent>= 80) color = "text-success";
+                          else if (g.batteryHealthPercent >= 60) color = "text-warning";
+                          %>
+                          <div class="flex items-center gap-2">
+                            <div class="radial-progress <%= color %>"
+                              style="--value:<%= g.batteryHealthPercent %>; --size:1.8rem; --thickness: 2px;"
+                              role="progressbar">
+                              <span class="text-[10px] font-bold text-base-content">
+                                <%= g.batteryHealthPercent %>
+                              </span>
+                            </div>
+                            <span class="text-xs font-bold opacity-40">%</span>
+                          </div>
+                      </td>
+                      <td>
+                        <div class="badge badge-outline badge-sm opacity-60">
+                          <%= g.User ? g.User.userName : "-" %>
+                        </div>
+                      </td>
+                      <td class="max-w-md">
+                        <p class="text-sm opacity-70 line-clamp-2 italic" title="<%= g.notes %>">
+                          <%= g.notes || "(No notes provided)" %>
+                        </p>
+                      </td>
+                    </tr>
+                    <% }); %>
+
+                      <% if (!grades || grades.length===0) { %>
+                        <tr>
+                          <td colspan="6" class="text-center py-16">
+                            <div class="flex flex-col items-center opacity-30">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                              </svg>
+                              <p class="font-bold">No grading records found</p>
+                            </div>
+                          </td>
+                        </tr>
+                        <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
     </div>
-  </div>
 </body>
+
 </html>
