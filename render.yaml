@@ -13,10 +13,10 @@ services:
       - key: SESSIONSECRET
         generateValue: true
       - key: PGHOST
-        placeholder: "Neon Host"
+        sync: false
       - key: PGDATABASE
-        placeholder: "Neon Database"
+        sync: false
       - key: PGUSER
-        placeholder: "Neon User"
+        sync: false
       - key: PGPASSWORD
-        placeholder: "Neon Password"
+        sync: false
