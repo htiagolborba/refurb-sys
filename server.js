@@ -310,6 +310,15 @@ app.get("/admin/users/role/:id", ensureAdmin, async (req, res) => {
   }
 });
 
+// ===== Help =====
+app.get("/help/guidelines", ensureLogin, (req, res) => {
+  res.render("help/guidelines");
+});
+
+app.get("/help/about", ensureLogin, (req, res) => {
+  res.render("help/about");
+});
+
 // 404
 app.use((req, res) => {
   res.status(404).render("404");
