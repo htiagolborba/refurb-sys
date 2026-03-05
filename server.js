@@ -318,9 +318,7 @@ app.use((req, res) => {
 // start
 lgs.initialize()
   .then(() => {
-    if (!process.env.VERCEL) {
-      app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
-    }
+    app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
   })
   .catch((err) => {
     console.log("Unable to start server: " + err);

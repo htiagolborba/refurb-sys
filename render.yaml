@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: laptop-grading-system
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: SESSIONSECRET
+        generateValue: true
+      - key: PGHOST
+        placeholder: "Neon Host"
+      - key: PGDATABASE
+        placeholder: "Neon Database"
+      - key: PGUSER
+        placeholder: "Neon User"
+      - key: PGPASSWORD
+        placeholder: "Neon Password"
