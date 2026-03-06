@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Local databases
+*.sqlite
+*.sqlite-journal
+
+# Environment variables
+.env
+
+# MacOS files
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Build files
+public/css/main.css
