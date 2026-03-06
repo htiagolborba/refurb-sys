@@ -221,10 +221,12 @@
                         </tr>
                       </thead>
                       <tbody class="text-sm">
-                        <% // Filter to only show grades by the current user const userGrades=orderGrades.filter(g=>
-                          String(g.createdByUserId) === String(session.user.id));
-                          userGrades.forEach((g, index)=> {
-                          %>
+                        <%
+                          var userGrades = orderGrades.filter(function(g) {
+                            return String(g.createdByUserId) === String(session.user.id);
+                          });
+                          userGrades.forEach(function(g, index) {
+                        %>
                           <tr class="hover">
                             <td class="text-center font-bold opacity-50">
                               <%= index + 1 %>
