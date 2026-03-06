@@ -101,11 +101,17 @@ app.get("/presets", ensureLogin, async (req, res) => {
   }
 });
 
-app.get("/presets/add", ensureAdmin, (req, res) => {
+app.get("/presets/add", ensureLogin, (req, res) => {
+  if (req.session.user.role !== "ADMIN" && !req.session.user.canAddPreset) {
+    return res.status(403).render("500", { message: "Permission Denied: Add Presets" });
+  }
   res.render("addPreset", { errorMessage: null, form: {} });
 });
 
-app.post("/presets/add", ensureAdmin, async (req, res) => {
+app.post("/presets/add", ensureLogin, async (req, res) => {
+  if (req.session.user.role !== "ADMIN" && !req.session.user.canAddPreset) {
+    return res.status(403).render("500", { message: "Permission Denied: Add Presets" });
+  }
   try {
     await lgs.createPreset(req.body);
     res.redirect("/presets");
@@ -114,7 +120,10 @@ app.post("/presets/add", ensureAdmin, async (req, res) => {
   }
 });
 
-app.get("/presets/edit/:id", ensureAdmin, async (req, res) => {
+app.get("/presets/edit/:id", ensureLogin, async (req, res) => {
+  if (req.session.user.role !== "ADMIN" && !req.session.user.canEditPreset) {
+    return res.status(403).render("500", { message: "Permission Denied: Edit Presets" });
+  }
   try {
     const preset = await lgs.getPreset(req.params.id);
     if (!preset) return res.status(404).render("404");
@@ -124,7 +133,10 @@ app.get("/presets/edit/:id", ensureAdmin, async (req, res) => {
   }
 });
 
-app.post("/presets/edit/:id", ensureAdmin, async (req, res) => {
+app.post("/presets/edit/:id", ensureLogin, async (req, res) => {
+  if (req.session.user.role !== "ADMIN" && !req.session.user.canEditPreset) {
+    return res.status(403).render("500", { message: "Permission Denied: Edit Presets" });
+  }
   try {
     await lgs.updatePreset(req.params.id, req.body);
     res.redirect("/presets");
@@ -134,13 +146,16 @@ app.post("/presets/edit/:id", ensureAdmin, async (req, res) => {
   }
 });
 
-app.post("/presets/delete/:id", ensureAdmin, async (req, res) => {
+app.post("/presets/delete/:id", ensureLogin, async (req, res) => {
+  if (req.session.user.role !== "ADMIN" && !req.session.user.canDeletePreset) {
+    return res.status(403).render("500", { message: "Permission Denied: Delete Presets" });
+  }
   try {
     const password = req.body.adminPassword || "";
-    // Re-authenticate to confirm it's actually the admin
+    // Re-authenticate to confirm it's actually the user
     const validUser = await lgs.authenticate(req.session.user.userName, password);
-    if (!validUser || validUser.role !== "ADMIN") {
-      return res.status(403).send("Invalid Admin Password");
+    if (!validUser) {
+      return res.status(403).send("Invalid Password");
     }
     await lgs.deletePreset(req.params.id);
     res.redirect("/presets");
@@ -151,10 +166,16 @@ app.post("/presets/delete/:id", ensureAdmin, async (req, res) => {
 
 // ===== Orders (TECH + ADMIN) =====
 app.get("/orders/new", ensureLogin, (req, res) => {
+  if (req.session.user.role !== "ADMIN" && !req.session.user.canAddOrder) {
+    return res.status(403).render("500", { message: "Permission Denied: Create Order" });
+  }
   res.render("newOrder", { errorMessage: null, form: {} });
 });
 
 app.post("/orders/new", ensureLogin, async (req, res) => {
+  if (req.session.user.role !== "ADMIN" && !req.session.user.canAddOrder) {
+    return res.status(403).render("500", { message: "Permission Denied: Create Order" });
+  }
   try {
     const name = (req.body.name || "").trim();
     const orderIdStr = (req.body.orderId || "").trim();
@@ -239,16 +260,13 @@ app.get("/grades", ensureLogin, async (req, res) => {
       technician: req.query.technician || "",
       fromDate: req.query.fromDate || "",
       toDate: req.query.toDate || "",
-      presetId: req.query.presetId || ""
+      presetId: req.query.presetId || "",
+      orderQuery: req.query.orderQuery || ""
     };
 
-    if (req.session.user.role === "ADMIN") {
-      presets = await lgs.listPresets(false);
-      users = await lgs.listUsers();
-      grades = await lgs.listGradesAdminFiltered(filters);
-    } else {
-      grades = await lgs.listGradesForUser(req.session.user);
-    }
+    presets = await lgs.listPresets(false);
+    users = await lgs.listUsers();
+    grades = await lgs.listGradesAdminFiltered(filters);
 
     res.render("grades", { grades, presets, users, filters });
   } catch (err) {
@@ -274,11 +292,63 @@ app.post("/admin/users/add", ensureAdmin, async (req, res) => {
 
     if (!userName || !password) throw new Error("Username and password are required.");
 
-    await lgs.createUser({ userName, password, role });
+    await lgs.createUser({
+      userName,
+      password,
+      role,
+      canAddPreset: req.body.canAddPreset === "on",
+      canEditPreset: req.body.canEditPreset === "on",
+      canDeletePreset: req.body.canDeletePreset === "on",
+      canAddOrder: req.body.canAddOrder === "on",
+      canEditOrder: req.body.canEditOrder === "on",
+      canDeleteOrder: req.body.canDeleteOrder === "on",
+      canAddUser: req.body.canAddUser === "on",
+      canEditUser: !!(req.body.canEditUser === "on"),
+      canDeleteUser: !!(req.body.canDeleteUser === "on")
+    });
     res.redirect("/admin/users");
   } catch (err) {
     const users = await lgs.listUsers();
     res.status(400).render("users", { users, errorMessage: err.message || String(err) });
+  }
+});
+
+app.post("/admin/users/permissions/:id", ensureAdmin, async (req, res) => {
+  try {
+    await lgs.updateUserPermissions(req.params.id, {
+      canAddPreset: req.body.canAddPreset === "on",
+      canEditPreset: req.body.canEditPreset === "on",
+      canDeletePreset: req.body.canDeletePreset === "on",
+      canAddOrder: req.body.canAddOrder === "on",
+      canEditOrder: req.body.canEditOrder === "on",
+      canDeleteOrder: req.body.canDeleteOrder === "on",
+      canAddUser: req.body.canAddUser === "on",
+      canEditUser: req.body.canEditUser === "on",
+      canDeleteUser: req.body.canDeleteUser === "on"
+    });
+    res.redirect("/admin/users");
+  } catch (err) {
+    res.status(500).render("500", { message: `Error updating permissions: ${err}` });
+  }
+});
+
+app.post("/admin/users/password/:id", ensureAdmin, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword) throw new Error("New password is required");
+    await lgs.updateUserPassword(req.params.id, newPassword);
+    res.redirect("/admin/users");
+  } catch (err) {
+    res.status(500).render("500", { message: `Error updating password: ${err}` });
+  }
+});
+
+app.post("/admin/users/delete/:id", ensureAdmin, async (req, res) => {
+  try {
+    await lgs.deleteUser(req.params.id);
+    res.redirect("/admin/users");
+  } catch (err) {
+    res.status(500).render("500", { message: `Error deleting user: ${err}` });
   }
 });
 
@@ -307,6 +377,27 @@ app.get("/admin/users/role/:id", ensureAdmin, async (req, res) => {
     res.redirect("/admin/users");
   } catch (err) {
     res.status(500).render("500", { message: `Unable to set role: ${err.message || err}` });
+  }
+});
+
+// ===== Grade Actions (Edit/Delete) =====
+app.post("/grades/edit/:id", ensureLogin, async (req, res) => {
+  try {
+    await lgs.updateGrade(req.params.id, req.body);
+    const backURL = req.header('Referer') || '/grades';
+    res.redirect(backURL);
+  } catch (err) {
+    res.status(500).render("500", { message: `Error updating grade: ${err}` });
+  }
+});
+
+app.post("/grades/delete/:id", ensureLogin, async (req, res) => {
+  try {
+    await lgs.deleteGrade(req.params.id);
+    const backURL = req.header('Referer') || '/grades';
+    res.redirect(backURL);
+  } catch (err) {
+    res.status(500).render("500", { message: `Error deleting grade: ${err}` });
   }
 });
 

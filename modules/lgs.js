@@ -31,7 +31,18 @@ const User = sequelize.define("User", {
   userName: { type: Sequelize.STRING, unique: true, allowNull: false },
   passwordHash: { type: Sequelize.STRING, allowNull: false },
   role: { type: Sequelize.STRING, allowNull: false, defaultValue: "TECH" }, // TECH | ADMIN
-  active: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: true }
+  active: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: true },
+
+  // Permissions
+  canAddPreset: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canEditPreset: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canDeletePreset: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canAddOrder: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canEditOrder: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canDeleteOrder: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canAddUser: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canEditUser: { type: Sequelize.BOOLEAN, defaultValue: false },
+  canDeleteUser: { type: Sequelize.BOOLEAN, defaultValue: false }
 }, { timestamps: true });
 
 const ModelPreset = sequelize.define("ModelPreset", {
@@ -115,7 +126,16 @@ async function authenticate(userName, password) {
   return {
     id: user.id,
     userName: user.userName,
-    role: user.role
+    role: user.role,
+    canAddPreset: user.canAddPreset,
+    canEditPreset: user.canEditPreset,
+    canDeletePreset: user.canDeletePreset,
+    canAddOrder: user.canAddOrder,
+    canEditOrder: user.canEditOrder,
+    canDeleteOrder: user.canDeleteOrder,
+    canAddUser: user.canAddUser,
+    canEditUser: user.canEditUser,
+    canDeleteUser: user.canDeleteUser
   };
 }
 
@@ -125,14 +145,37 @@ async function listUsers() {
   return users.map(u => u.toJSON());
 }
 
-async function createUser({ userName, password, role }) {
+async function createUser(userData) {
+  const { userName, password, role, ...perms } = userData;
   const hash = await bcrypt.hash(password, 10);
   await User.create({
     userName,
     passwordHash: hash,
     role: role === "ADMIN" ? "ADMIN" : "TECH",
-    active: true
+    active: true,
+    canAddPreset: !!perms.canAddPreset,
+    canEditPreset: !!perms.canEditPreset,
+    canDeletePreset: !!perms.canDeletePreset,
+    canAddOrder: !!perms.canAddOrder,
+    canEditOrder: !!perms.canEditOrder,
+    canDeleteOrder: !!perms.canDeleteOrder,
+    canAddUser: !!perms.canAddUser,
+    canEditUser: !!perms.canEditUser,
+    canDeleteUser: !!perms.canDeleteUser
   });
+}
+
+async function updateUserPermissions(userId, permissions) {
+  await User.update(permissions, { where: { id: userId } });
+}
+
+async function updateUserPassword(userId, newPassword) {
+  const hash = await bcrypt.hash(newPassword, 10);
+  await User.update({ passwordHash: hash }, { where: { id: userId } });
+}
+
+async function deleteUser(userId) {
+  await User.destroy({ where: { id: userId } });
 }
 
 async function setUserActive(userId, active) {
@@ -301,9 +344,18 @@ async function listGradesForUser(user) {
 async function listGradesAdminFiltered(filters) {
   const where = {};
 
-  if (filters.technician && filters.technician.trim()) {
-    // filter by technician username
-    // We’ll filter via include where, not base where
+  if (filters.orderQuery && filters.orderQuery.trim()) {
+    const q = filters.orderQuery.trim();
+    const orders = await Order.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          { name: { [Sequelize.Op.iLike]: `%${q}%` } },
+          { orderId: { [Sequelize.Op.iLike]: `%${q}%` } }
+        ]
+      },
+      attributes: ["id"]
+    });
+    where.orderIdRef = { [Sequelize.Op.in]: orders.map(o => o.id) };
   }
 
   if (filters.fromDate && filters.toDate) {
@@ -344,6 +396,22 @@ async function listGradesAdminFiltered(filters) {
   return grades.map(g => g.toJSON());
 }
 
+async function updateGrade(id, body) {
+  await LaptopGrade.update({
+    serialNumber: (body.serialNumber || "").trim(),
+    cpu: (body.cpu || "").trim(),
+    ramGb: normalizeInt(body.ramGb, 0),
+    ssdGb: body.ssdGb ? normalizeInt(body.ssdGb, 0) : null,
+    touchscreen: normalizeBool(body.touchscreen),
+    batteryHealthPercent: normalizeInt(body.batteryHealthPercent, 0),
+    notes: (body.notes || "").trim()
+  }, { where: { id } });
+}
+
+async function deleteGrade(id) {
+  await LaptopGrade.destroy({ where: { id } });
+}
+
 // ===== Orders =====
 async function createOrder(data) {
   const o = await Order.create({
@@ -374,6 +442,9 @@ module.exports = {
   createUser,
   setUserActive,
   setUserRole,
+  updateUserPermissions,
+  updateUserPassword,
+  deleteUser,
 
   // presets
   listPresets,
@@ -389,6 +460,8 @@ module.exports = {
   listGradesForUser,
   listGradesAdminFiltered,
   listGradesByOrder,
+  updateGrade,
+  deleteGrade,
 
   // orders
   createOrder,
