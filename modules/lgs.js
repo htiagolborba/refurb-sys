@@ -124,9 +124,11 @@ async function initialize() {
         await sequelize.query(`ALTER TABLE Users ADD COLUMN ${col} BOOLEAN DEFAULT 0;`);
       } catch (e) { }
     }
+    await sequelize.sync();
+  } else {
+    // For PostgreSQL on Render, alter: true works correctly to add new columns
+    await sequelize.sync({ alter: true });
   }
-
-  await sequelize.sync();
 
   // Ensure initial admin exists
   const adminUser = process.env.INITIAL_ADMIN_USER;
