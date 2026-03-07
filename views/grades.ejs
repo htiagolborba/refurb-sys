@@ -42,7 +42,13 @@
             <div class="form-control">
               <label class="label"><span class="label-text font-semibold">Order Name/ID</span></label>
               <input type="text" name="orderQuery" class="input input-bordered input-sm" placeholder="Search order..."
-                value="<%= filters.orderQuery %>" required />
+                value="<%= filters.orderQuery %>" />
+            </div>
+
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Serial Number</span></label>
+              <input type="text" name="serialQuery" class="input input-bordered input-sm" placeholder="Search serial..."
+                value="<%= filters.serialQuery %>" />
             </div>
 
             <div class="form-control">
@@ -82,7 +88,7 @@
             </div>
 
             <div class="flex items-end gap-2 shrink-0">
-              <button class="btn btn-sm btn-primary px-6 rounded-lg" type="submit">Apply</button>
+              <button class="btn btn-sm btn-primary px-6 rounded-lg" type="submit">Find</button>
               <a class="btn btn-sm btn-ghost rounded-lg" href="/grades">Reset</a>
             </div>
           </form>
@@ -112,7 +118,7 @@
                         <%= new Date(g.createdAt).toLocaleDateString() %>
                       </span>
                       <span class="text-[10px] font-mono">
-                        <%= new Date(g.createdAt).toLocaleTimeString([], {hour: '2bit' , minute:'2bit'}) %>
+                        <%= new Date(g.createdAt).toLocaleTimeString([], {hour: '2-digit' , minute:'2-digit'}) %>
                       </span>
                     </div>
                   </td>

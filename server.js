@@ -261,7 +261,8 @@ app.get("/grades", ensureLogin, async (req, res) => {
       fromDate: req.query.fromDate || "",
       toDate: req.query.toDate || "",
       presetId: req.query.presetId || "",
-      orderQuery: req.query.orderQuery || ""
+      orderQuery: req.query.orderQuery || "",
+      serialQuery: req.query.serialQuery || ""
     };
 
     presets = await lgs.listPresets(false);

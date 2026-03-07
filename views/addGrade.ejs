@@ -90,22 +90,30 @@
 
                           <div class="form-control mb-6">
                             <label class="label"><span class="label-text font-bold">Select Model Preset</span></label>
-                            <select id="presetId" name="presetId" required
-                              class="select select-bordered w-full select-lg text-lg">
-                              <option value="" disabled <%=!presetId ? 'selected' : '' %>>Choose a configuration...
-                              </option>
-                              <% presets.forEach(p=> { %>
-                                <option value="<%= p.id %>" <%=String(presetId)===String(p.id) ? 'selected' : '' %>
-                                  data-brand="<%= p.brand %>" data-model="<%= p.model %>"
-                                      data-cpu="<%= p.defaultCpu %>" data-ram="<%= p.defaultRamGb %>"
-                                          data-ssd="<%= p.defaultSsdGb %>"
-                                            data-touch="<%= p.defaultTouchscreen ? 'true' : 'false' %>">
-                                              <%= p.brand %>
-                                                <%= p.model %>
-                                                  <%= p.observations ? `- ${p.observations}` : '' %>
-                                </option>
-                                <% }); %>
-                            </select>
+                            <div class="flex items-stretch gap-2">
+                              <select id="presetId" name="presetId" required
+                                class="select select-bordered flex-1 select-lg text-lg">
+                                <option value="" disabled <%=!presetId ? 'selected' : '' %>>Choose a
+                                  configuration...</option>
+                                <% presets.forEach(p=> { %>
+                                  <option value="<%= p.id %>" <%=String(presetId)===String(p.id) ? 'selected' : '' %>
+                                    data-brand="<%= p.brand %>" data-model="<%= p.model %>"
+                                        data-cpu="<%= p.defaultCpu %>" data-ram="<%= p.defaultRamGb %>"
+                                            data-ssd="<%= p.defaultSsdGb %>"
+                                              data-touch="<%= p.defaultTouchscreen ? 'true' : 'false' %>">
+                                                <%= p.brand %>
+                                                  <%= p.model %>
+                                                    <%= p.observations ? `- ${p.observations}` : '' %>
+                                  </option>
+                                  <% }); %>
+                              </select>
+                              <% if (session.user && (session.user.role==='ADMIN' || session.user.canAddPreset)) { %>
+                                <a href="/presets/add"
+                                  class="btn bg-[#009b3a] hover:bg-[#007b2e] border-[#009b3a] text-white px-6 shadow-sm flex items-center">
+                                  <span>Add</span>
+                                </a>
+                                <% } %>
+                            </div>
                           </div>
 
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -217,16 +225,15 @@
                           <th>SSD</th>
                           <th>Battery</th>
                           <th class="text-center">Touch</th>
+                          <th>Observations</th>
                           <th class="text-right">Manage</th>
                         </tr>
                       </thead>
                       <tbody class="text-sm">
-                        <%
-                          var userGrades = orderGrades.filter(function(g) {
-                            return String(g.createdByUserId) === String(session.user.id);
-                          });
+                        <% const userGrades=orderGrades.filter(g=> String(g.createdByUserId) ===
+                          String(session.user.id));
                           userGrades.forEach(function(g, index) {
-                        %>
+                          %>
                           <tr class="hover">
                             <td class="text-center font-bold opacity-50">
                               <%= index + 1 %>
@@ -262,6 +269,12 @@
                                 title="<%= g.touchscreen ? 'Touch Enabled' : 'Touch Disabled' %>">
                               </div>
                             </td>
+                            <td>
+                              <div
+                                class="max-w-[200px] overflow-x-auto whitespace-nowrap scrollbar-hide text-xs opacity-70">
+                                <%= g.notes || '' %>
+                              </div>
+                            </td>
                             <td class="text-right">
                               <div class="flex justify-end gap-1">
                                 <button type="button" class="btn btn-ghost btn-xs text-[10px] text-info"
@@ -287,12 +300,12 @@
                                       <div class="form-control">
                                         <label class="label"><span class="label-text">CPU</span></label>
                                         <input type="text" name="cpu" value="<%= g.cpu %>"
-                                          class="input input-bordered input-sm" required>
+                                          class="input input-bordered input-sm">
                                       </div>
                                       <div class="form-control">
                                         <label class="label"><span class="label-text">RAM (GB)</span></label>
                                         <input type="number" name="ramGb" value="<%= g.ramGb %>"
-                                          class="input input-bordered input-sm" required>
+                                          class="input input-bordered input-sm">
                                       </div>
                                       <div class="form-control">
                                         <label class="label"><span class="label-text">SSD (GB)</span></label>

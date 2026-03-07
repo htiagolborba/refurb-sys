@@ -61,11 +61,12 @@ const User = sequelize.define("User", {
 const ModelPreset = sequelize.define("ModelPreset", {
   id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
   deviceType: { type: Sequelize.STRING, allowNull: false, defaultValue: "LAPTOP" }, // LAPTOP | DESKTOP
+  formFactor: { type: Sequelize.STRING, allowNull: true },      // For DESKTOPs (USFF, SFF, etc)
   brand: { type: Sequelize.STRING, allowNull: false },          // Dell
   model: { type: Sequelize.STRING, allowNull: false },          // 7420
   observations: { type: Sequelize.TEXT, allowNull: true },      // Renamed from presetLabel
-  defaultCpu: { type: Sequelize.STRING, allowNull: false },
-  defaultRamGb: { type: Sequelize.INTEGER, allowNull: false },
+  defaultCpu: { type: Sequelize.STRING, allowNull: true },
+  defaultRamGb: { type: Sequelize.INTEGER, allowNull: true },
   defaultSsdGb: { type: Sequelize.INTEGER, allowNull: true },   // Now optional
   defaultTouchscreen: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
   active: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: true }
@@ -81,8 +82,8 @@ const LaptopGrade = sequelize.define("LaptopGrade", {
   id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
   serialNumber: { type: Sequelize.STRING, allowNull: false },
   // snapshot fields (editável no form)
-  cpu: { type: Sequelize.STRING, allowNull: false },
-  ramGb: { type: Sequelize.INTEGER, allowNull: false },
+  cpu: { type: Sequelize.STRING, allowNull: true },
+  ramGb: { type: Sequelize.INTEGER, allowNull: true },
   ssdGb: { type: Sequelize.INTEGER, allowNull: true },
   touchscreen: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
   batteryHealthPercent: { type: Sequelize.INTEGER, allowNull: false },
@@ -107,7 +108,25 @@ function normalizeBool(value) {
 
 // ===== Init =====
 async function initialize() {
-  await sequelize.sync({ alter: true }); // Enable alter for schema updates
+  const isSqlite = process.env.USE_SQLITE === "true";
+
+  if (isSqlite) {
+    // Manual column adds for SQLite because sync({alter: true}) is buggy with User table backup
+    try {
+      await sequelize.query("ALTER TABLE ModelPresets ADD COLUMN formFactor TEXT;");
+    } catch (e) {
+      // column probably exists
+    }
+    // Also ensure User permissions exist (in case partially migrated)
+    const columns = ["canAddPreset", "canEditPreset", "canDeletePreset", "canAddOrder", "canEditOrder", "canDeleteOrder", "canAddUser", "canEditUser", "canDeleteUser"];
+    for (const col of columns) {
+      try {
+        await sequelize.query(`ALTER TABLE Users ADD COLUMN ${col} BOOLEAN DEFAULT 0;`);
+      } catch (e) { }
+    }
+  }
+
+  await sequelize.sync();
 
   // Ensure initial admin exists
   const adminUser = process.env.INITIAL_ADMIN_USER;
@@ -121,8 +140,18 @@ async function initialize() {
         userName: adminUser,
         passwordHash: hash,
         role: "ADMIN",
-        active: true
+        active: true,
+        canAddPreset: true, canEditPreset: true, canDeletePreset: true,
+        canAddOrder: true, canEditOrder: true, canDeleteOrder: true,
+        canAddUser: true, canEditUser: true, canDeleteUser: true
       });
+    } else {
+      // Ensure initial admin always has permissions even if added before the columns existed
+      await User.update({
+        canAddPreset: true, canEditPreset: true, canDeletePreset: true,
+        canAddOrder: true, canEditOrder: true, canDeleteOrder: true,
+        canAddUser: true, canEditUser: true, canDeleteUser: true
+      }, { where: { userName: adminUser } });
     }
   }
 }
@@ -231,17 +260,22 @@ async function listPresetsFiltered(filters, activeOnly = true) {
 async function createPreset(body) {
   const rawBrand = body.brand === "OTHER" ? body.brandOther : body.brand;
   const brand = (rawBrand || "").trim();
-  if (!brand) {
-    throw new Error("Brand is required.");
-  }
+  const model = (body.model || "").trim();
+
+  if (!brand) throw new Error("Brand is required.");
+  if (!model) throw new Error("Model Name is required.");
+
   const rawRam = body.defaultRamGb === "OTHER" ? body.defaultRamGbOther : body.defaultRamGb;
+  const deviceType = (body.deviceType === "DESKTOP") ? "DESKTOP" : "LAPTOP";
+
   await ModelPreset.create({
-    deviceType: (body.deviceType === "DESKTOP") ? "DESKTOP" : "LAPTOP",
+    deviceType,
+    formFactor: deviceType === "DESKTOP" ? (body.formFactor || null) : null,
     brand,
-    model: (body.model || "").trim(),
+    model,
     observations: (body.observations || "").trim(),
-    defaultCpu: (body.defaultCpu || "").trim(),
-    defaultRamGb: normalizeInt(rawRam, 0),
+    defaultCpu: (body.defaultCpu || null),
+    defaultRamGb: rawRam ? normalizeInt(rawRam, 0) : null,
     defaultSsdGb: body.defaultSsdGb ? normalizeInt(body.defaultSsdGb, 0) : null,
     defaultTouchscreen: normalizeBool(body.defaultTouchscreen),
     active: true
@@ -251,22 +285,25 @@ async function createPreset(body) {
 async function updatePreset(id, body) {
   const rawBrand = body.brand === "OTHER" ? body.brandOther : body.brand;
   const brand = (rawBrand || "").trim();
-  if (!brand) {
-    throw new Error("Brand is required.");
-  }
+  const model = (body.model || "").trim();
+
+  if (!brand) throw new Error("Brand is required.");
+  if (!model) throw new Error("Model Name is required.");
+
   const rawRam = body.defaultRamGb === "OTHER" ? body.defaultRamGbOther : body.defaultRamGb;
+  const deviceType = (body.deviceType === "DESKTOP") ? "DESKTOP" : "LAPTOP";
 
   await ModelPreset.update({
-    deviceType: (body.deviceType === "DESKTOP") ? "DESKTOP" : "LAPTOP",
+    deviceType,
+    formFactor: deviceType === "DESKTOP" ? (body.formFactor || null) : null,
     brand,
-    model: (body.model || "").trim(),
+    model,
     observations: (body.observations || "").trim(),
-    defaultCpu: (body.defaultCpu || "").trim(),
-    defaultRamGb: normalizeInt(rawRam, 0),
+    defaultCpu: (body.defaultCpu || null),
+    defaultRamGb: rawRam ? normalizeInt(rawRam, 0) : null,
     defaultSsdGb: body.defaultSsdGb ? normalizeInt(body.defaultSsdGb, 0) : null,
-    defaultTouchscreen: normalizeBool(body.defaultTouchscreen),
-    active: true
-  }, { where: { id } });
+    defaultTouchscreen: normalizeBool(body.defaultTouchscreen)
+  }, { where: { id: id } });
 }
 
 async function getPreset(id) {
@@ -372,6 +409,13 @@ async function listGradesAdminFiltered(filters) {
       attributes: ["id"]
     });
     where.orderIdRef = { [Sequelize.Op.in]: orders.map(o => o.id) };
+  }
+
+  if (filters.serialQuery && filters.serialQuery.trim()) {
+    const q = filters.serialQuery.trim();
+    const isPostgres = sequelize.getDialect() === "postgres";
+    const op = isPostgres ? Sequelize.Op.iLike : Sequelize.Op.like;
+    where.serialNumber = { [op]: `%${q}%` };
   }
 
   if (filters.fromDate && filters.toDate) {
