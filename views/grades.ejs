@@ -153,175 +153,216 @@
         </div>
       </div>
 
-      <div class="card bg-white border border-base-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="table table-zebra w-full table-md">
-            <thead class="bg-base-50 border-b border-base-200">
-              <tr class="text-xs uppercase tracking-tighter opacity-70">
-                <th>Timestamp</th>
-                <th>Serial Number</th>
-                <th>Configuration</th>
-                <th>Battery</th>
-                <th>Author</th>
-                <th>Touch</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% grades.forEach(g=> { %>
-                <tr class="hover group">
-                  <td class="text-sm opacity-60">
-                    <div class="flex flex-col">
-                      <span>
-                        <%= new Date(g.createdAt).toLocaleDateString() %>
-                      </span>
-                      <span class="text-[10px] font-mono">
-                        <%= new Date(g.createdAt).toLocaleTimeString([], {hour: '2-digit' , minute:'2-digit'}) %>
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="font-mono font-bold bg-base-200 px-2 py-1 rounded text-sm tracking-widest">
-                      <%= g.serialNumber %>
-                    </span>
-                  </td>
-                  <td class="max-w-xs">
-                    <div class="flex flex-col">
-                      <span class="font-bold text-sm">
-                        <% if (g.ModelPreset) { %>
-                          <%= g.ModelPreset.brand %>
-                            <%= g.ModelPreset.model %>
-                              <% } else { %>
-                                Manual Entry
-                                <% } %>
-                      </span>
-                      <span class="text-[11px] opacity-60">
-                        <%= g.cpu %> / <%= g.ramGb %>GB / <%= g.ssdGb %>GB
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <% if (g.batteryHealthPercent===-1) { %>
-                      <div class="badge badge-error badge-outline badge-xs opacity-70 font-bold" title="No Battery">
-                        ✕
-                      </div>
-                      <% } else { %>
-                        <% let color="text-error" ; if (g.batteryHealthPercent>= 80) color = "text-success";
-                          else if (g.batteryHealthPercent >= 60) color = "text-warning";
-                          %>
-                          <div class="flex items-center gap-2">
-                            <div class="radial-progress <%= color %>"
-                              style="--value:<%= g.batteryHealthPercent %>; --size:1.8rem; --thickness: 2px;"
-                              role="progressbar">
-                              <span class="text-[10px] font-bold text-base-content">
-                                <%= g.batteryHealthPercent %>
-                              </span>
-                            </div>
-                          </div>
-                          <% } %>
-                  </td>
-                  <td>
-                    <div class="badge badge-outline badge-sm opacity-60">
-                      <%= g.User ? g.User.userName : "-" %>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="w-3 h-3 rounded-full mx-auto <%= g.touchscreen ? 'bg-green-800' : 'bg-red-800' %>"
-                      title="<%= g.touchscreen ? 'Enabled' : 'Disabled' %>"></div>
-                  </td>
-                  <td>
-                    <div class="flex gap-2">
-                      <button class="btn btn-primary btn-xs text-white"
-                        onclick="document.getElementById('edit-grade-<%= g.id %>').showModal()">Edit</button>
-                      <form action="/grades/delete/<%= g.id %>" method="POST"
-                        onsubmit="return confirm('Delete this grading entry?');">
-                        <button class="btn btn-error btn-xs text-white" type="submit">Delete</button>
-                      </form>
-                    </div>
+      <% const hasFilters=filters.technician || filters.fromDate || filters.toDate || filters.presetId ||
+        filters.orderIdFilter || filters.serialQuery; if (hasFilters) { if (grades && grades.length> 0) {
+        const q = new URLSearchParams(filters).toString();
+        %>
 
-                    <!-- Edit Grade Modal -->
-                    <dialog id="edit-grade-<%= g.id %>" class="modal">
-                      <div class="modal-box max-w-2xl">
-                        <h3 class="font-bold text-lg mb-4">Edit Grading Entry: <%= g.serialNumber %>
-                        </h3>
-                        <form action="/grades/edit/<%= g.id %>" method="POST" class="grid grid-cols-2 gap-4">
-                          <div class="form-control">
-                            <label class="label"><span class="label-text">Serial Number</span></label>
-                            <input type="text" name="serialNumber" value="<%= g.serialNumber %>"
-                              class="input input-bordered" required>
-                          </div>
-                          <div class="form-control">
-                            <label class="label"><span class="label-text">CPU</span></label>
-                            <input type="text" name="cpu" value="<%= g.cpu %>" class="input input-bordered" required>
-                          </div>
-                          <div class="form-control">
-                            <label class="label"><span class="label-text">RAM (GB)</span></label>
-                            <input type="number" name="ramGb" value="<%= g.ramGb %>" class="input input-bordered"
-                              required>
-                          </div>
-                          <div class="form-control">
-                            <label class="label"><span class="label-text">SSD (GB)</span></label>
-                            <input type="number" name="ssdGb" value="<%= g.ssdGb %>" class="input input-bordered">
-                          </div>
-                          <div class="form-control">
-                            <label class="label"><span class="label-text">Battery Health %</span></label>
-                            <input type="number" id="editHistoryBattery-<%= g.id %>" name="batteryHealthPercent"
-                              value="<%= g.batteryHealthPercent !== -1 ? g.batteryHealthPercent : '' %>"
-                              class="input input-bordered" <%=g.batteryHealthPercent===-1 ? 'disabled' : 'required' %>
-                            min="0" max="100">
-                            <label class="cursor-pointer label justify-start gap-2 mt-2">
-                              <input type="checkbox" name="noBattery" class="checkbox checkbox-sm checkbox-error"
-                                <%=g.batteryHealthPercent===-1 ? 'checked' : '' %>
-                              onchange="const el = document.getElementById('editHistoryBattery-<%= g.id %>');
-                                if(this.checked) { el.disabled = true; el.value = ''; el.required = false; } else {
-                                el.disabled = false; el.required = true; }" />
-                                <span class="label-text">No Battery</span>
-                            </label>
-                          </div>
-                          <div class="form-control">
-                            <label class="label"><span class="label-text">Touchscreen</span></label>
-                            <label
-                              class="label cursor-pointer justify-start gap-4 border border-base-200 rounded-lg px-4">
-                              <input type="checkbox" name="touchscreen" class="checkbox" <%=g.touchscreen ? 'checked'
-                                : '' %>>
-                              <span class="label-text">Enable Touch</span>
-                            </label>
-                          </div>
-                          <div class="form-control col-span-2">
-                            <label class="label"><span class="label-text">Notes</span></label>
-                            <textarea name="notes" class="textarea textarea-bordered h-24"><%= g.notes %></textarea>
-                          </div>
-                          <div class="modal-action col-span-2">
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                            <button type="button" onclick="this.closest('dialog').close()" class="btn">Cancel</button>
-                          </div>
+        <div class="flex justify-between items-center mt-6 mb-4">
+          <h2 class="text-xl font-bold">Search Results</h2>
+          <div class="flex gap-2">
+            <a href="/grades/export/csv?<%= q %>" class="btn btn-sm btn-outline btn-neutral">Export CSV</a>
+            <a href="/grades/export/xlsx?<%= q %>" class="btn btn-sm btn-outline btn-success">Export Excel</a>
+          </div>
+        </div>
+
+        <div class="card bg-white border border-base-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full table-md">
+              <thead class="bg-base-50 border-b border-base-200">
+                <tr class="text-xs uppercase tracking-tighter opacity-70">
+                  <th class="w-12 text-center">#</th>
+                  <th>Timestamp</th>
+                  <th>Serial Number</th>
+                  <th>Configuration</th>
+                  <th>Battery</th>
+                  <th>Technician</th>
+                  <th>Touch</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% function getBadgeColor(name) { let hash=0; for (let i=0; i < name.length; i++)
+                  hash=name.charCodeAt(i) + ((hash << 5) - hash); const colors=['badge-primary', 'badge-secondary'
+                  , 'badge-accent' , 'badge-info' , 'badge-success' , 'badge-warning' , 'badge-error' ]; return
+                  colors[Math.abs(hash) % colors.length]; } grades.forEach((g, index)=> {
+                  %>
+                  <tr class="hover group">
+                    <td class="font-bold text-center opacity-50 bg-base-200/50 rounded-l-lg">
+                      <%= grades.length - index %>
+                    </td>
+                    <td class="text-sm opacity-60">
+                      <div class="flex flex-col">
+                        <span>
+                          <%= new Date(g.createdAt).toLocaleDateString() %>
+                        </span>
+                        <span class="text-[10px] font-mono">
+                          <%= new Date(g.createdAt).toLocaleTimeString([], {hour: '2-digit' , minute:'2-digit'}) %>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="font-mono font-bold bg-base-200 px-2 py-1 rounded text-sm tracking-widest">
+                        <%= g.serialNumber %>
+                      </span>
+                    </td>
+                    <td class="max-w-xs">
+                      <div class="flex flex-col">
+                        <span class="font-bold text-sm">
+                          <% if (g.ModelPreset) { %>
+                            <%= g.ModelPreset.brand %>
+                              <%= g.ModelPreset.model %>
+                                <% } else { %>
+                                  Manual Entry
+                                  <% } %>
+                        </span>
+                        <span class="text-[11px] opacity-60">
+                          <%= g.cpu %> / <%= g.ramGb %>GB / <%= g.ssdGb %>GB
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <% if (g.batteryHealthPercent===-1) { %>
+                        <div class="badge badge-error badge-outline badge-xs opacity-70 font-bold" title="No Battery">
+                          ✕
+                        </div>
+                        <% } else { %>
+                          <% let color="text-error" ; if (g.batteryHealthPercent>= 80) color = "text-success";
+                            else if (g.batteryHealthPercent >= 60) color = "text-warning";
+                            %>
+                            <div class="flex items-center gap-2">
+                              <div class="radial-progress <%= color %>"
+                                style="--value:<%= g.batteryHealthPercent %>; --size:1.8rem; --thickness: 2px;"
+                                role="progressbar">
+                                <span class="text-[10px] font-bold text-base-content">
+                                  <%= g.batteryHealthPercent %>
+                                </span>
+                              </div>
+                            </div>
+                            <% } %>
+                    </td>
+                    <td>
+                      <div
+                        class="badge <%= getBadgeColor(g.User ? g.User.userName : '-') %> badge-outline badge-sm opacity-80 font-bold tracking-wide">
+                        <%= g.User ? g.User.userName : "-" %>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="w-3 h-3 rounded-full mx-auto <%= g.touchscreen ? 'bg-green-800' : 'bg-red-800' %>"
+                        title="<%= g.touchscreen ? 'Enabled' : 'Disabled' %>"></div>
+                    </td>
+                    <td>
+                      <div class="flex gap-2">
+                        <button class="btn btn-primary btn-xs text-white"
+                          onclick="document.getElementById('edit-grade-<%= g.id %>').showModal()">Edit</button>
+                        <form action="/grades/delete/<%= g.id %>" method="POST"
+                          onsubmit="return confirm('Delete this grading entry?');">
+                          <button class="btn btn-error btn-xs text-white" type="submit">Delete</button>
                         </form>
                       </div>
-                    </dialog>
-                  </td>
-                </tr>
-                <% }); %>
 
-                  <% if (!grades || grades.length===0) { %>
-                    <tr>
-                      <td colspan="7" class="text-center py-16">
-                        <div class="flex flex-col items-center opacity-30">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                          </svg>
-                          <p class="font-bold">No grading records found <%= filters.orderQuery ? 'for "' +
-                              filters.orderQuery + '"' : '' %>
-                          </p>
+                      <!-- Edit Grade Modal -->
+                      <dialog id="edit-grade-<%= g.id %>" class="modal">
+                        <div class="modal-box max-w-2xl">
+                          <h3 class="font-bold text-lg mb-4">Edit Grading Entry: <%= g.serialNumber %>
+                          </h3>
+                          <form action="/grades/edit/<%= g.id %>" method="POST" class="grid grid-cols-2 gap-4">
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">Serial Number</span></label>
+                              <input type="text" name="serialNumber" value="<%= g.serialNumber %>"
+                                class="input input-bordered" required>
+                            </div>
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">CPU</span></label>
+                              <input type="text" name="cpu" value="<%= g.cpu %>" class="input input-bordered" required>
+                            </div>
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">RAM (GB)</span></label>
+                              <input type="number" name="ramGb" value="<%= g.ramGb %>" class="input input-bordered"
+                                required>
+                            </div>
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">SSD (GB)</span></label>
+                              <input type="number" name="ssdGb" value="<%= g.ssdGb %>" class="input input-bordered">
+                            </div>
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">Battery Health %</span></label>
+                              <input type="number" id="editHistoryBattery-<%= g.id %>" name="batteryHealthPercent"
+                                value="<%= g.batteryHealthPercent !== -1 ? g.batteryHealthPercent : '' %>"
+                                class="input input-bordered" <%=g.batteryHealthPercent===-1 ? 'disabled' : 'required' %>
+                              min="0" max="100">
+                              <label class="cursor-pointer label justify-start gap-2 mt-2">
+                                <input type="checkbox" name="noBattery" class="checkbox checkbox-sm checkbox-error"
+                                  <%=g.batteryHealthPercent===-1 ? 'checked' : '' %>
+                                onchange="const el = document.getElementById('editHistoryBattery-<%= g.id %>');
+                                  if(this.checked) { el.disabled = true; el.value = ''; el.required = false; } else {
+                                  el.disabled = false; el.required = true; }" />
+                                  <span class="label-text">No Battery</span>
+                              </label>
+                            </div>
+                            <div class="form-control">
+                              <label class="label"><span class="label-text">Touchscreen</span></label>
+                              <label
+                                class="label cursor-pointer justify-start gap-4 border border-base-200 rounded-lg px-4">
+                                <input type="checkbox" name="touchscreen" class="checkbox" <%=g.touchscreen ? 'checked'
+                                  : '' %>>
+                                <span class="label-text">Enable Touch</span>
+                              </label>
+                            </div>
+                            <div class="form-control col-span-2">
+                              <label class="label"><span class="label-text">Notes</span></label>
+                              <textarea name="notes" class="textarea textarea-bordered h-24"><%= g.notes %></textarea>
+                            </div>
+                            <div class="modal-action col-span-2">
+                              <button type="submit" class="btn btn-primary">Save Changes</button>
+                              <button type="button" onclick="this.closest('dialog').close()" class="btn">Cancel</button>
+                            </div>
+                          </form>
                         </div>
-                      </td>
-                    </tr>
-                    <% } %>
-            </tbody>
-          </table>
+                      </dialog>
+                    </td>
+                  </tr>
+                  <% }); %>
+
+                    <% if (!grades || grades.length===0) { %>
+                      <tr>
+                        <td colspan="7" class="text-center py-16">
+                          <div class="flex flex-col items-center opacity-30">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none"
+                              viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            <p class="font-bold">No grading records found <%= filters.orderQuery ? 'for "' +
+                                filters.orderQuery + '"' : '' %>
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                      <% } %>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+        <% } else { %>
+          <div class="alert alert-info shadow-sm mt-8">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              class="stroke-current shrink-0 w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>No units found for the selected filters.</span>
+          </div>
+          <% } } else { %>
+            <div class="text-center opacity-60 mt-12 py-12 border-2 border-dashed border-base-300 rounded-2xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 opacity-50" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p class="text-lg">Use the filters above to search for graded units.</p>
+            </div>
+            <% } %>
     </div>
 </body>
 

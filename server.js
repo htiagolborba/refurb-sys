@@ -127,7 +127,7 @@ app.get("/presets/edit/:id", ensureLogin, async (req, res) => {
   try {
     const preset = await lgs.getPreset(req.params.id);
     if (!preset) return res.status(404).render("404");
-    res.render("editPreset", { preset, errorMessage: null });
+    res.render("editPreset", { preset, form: preset, errorMessage: null });
   } catch (err) {
     res.status(500).render("500", { message: `Unable to load edit preset page: ${err.message || err}` });
   }
@@ -291,11 +291,100 @@ app.get("/grades", ensureLogin, async (req, res) => {
     presets = await lgs.listPresets(false);
     users = await lgs.listUsers();
     orders = await lgs.listOrders();
-    grades = await lgs.listGradesAdminFiltered(filters);
+
+    // Only search if user provided a filter
+    const hasFilters = filters.technician || filters.fromDate || filters.toDate || filters.presetId || filters.orderIdFilter || filters.serialQuery;
+    if (hasFilters) {
+      grades = await lgs.listGradesAdminFiltered(filters);
+    } else {
+      grades = [];
+    }
 
     res.render("grades", { grades, presets, users, orders, filters });
   } catch (err) {
     res.status(500).render("500", { message: `Unable to load grades: ${err.message || err}` });
+  }
+});
+
+// ===== Export Grades =====
+app.get("/grades/export/:format", ensureLogin, async (req, res) => {
+  try {
+    const format = req.params.format;
+    if (format !== 'csv' && format !== 'xlsx') {
+      return res.status(400).send("Invalid format");
+    }
+
+    const filters = {
+      technician: req.query.technician || "",
+      fromDate: req.query.fromDate || "",
+      toDate: req.query.toDate || "",
+      presetId: req.query.presetId || "",
+      orderIdFilter: req.query.orderIdFilter || "",
+      serialQuery: req.query.serialQuery || ""
+    };
+
+    const grades = await lgs.listGradesAdminFiltered(filters);
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('History Export');
+
+    worksheet.columns = [
+      { header: '#', key: 'index', width: 5 },
+      { header: 'TIMESTAMP', key: 'timestamp', width: 20 },
+      { header: 'SERIAL NUMBER', key: 'serial', width: 15 },
+      { header: 'PRESET', key: 'preset', width: 25 },
+      { header: 'CPU', key: 'cpu', width: 20 },
+      { header: 'RAM (GB)', key: 'ram', width: 10 },
+      { header: 'SSD (GB)', key: 'ssd', width: 10 },
+      { header: 'BATTERY (%)', key: 'battery', width: 15 },
+      { header: 'TECHNICIAN', key: 'author', width: 15 },
+      { header: 'TOUCHSCREEN', key: 'touch', width: 15 },
+      { header: 'OBSERVATIONS', key: 'obs', width: 40 }
+    ];
+
+    // Style Header Row
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF000000' }
+      };
+      cell.font = {
+        color: { argb: 'FFFFFFFF' },
+        bold: true
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+
+    grades.forEach((g, index) => {
+      worksheet.addRow({
+        index: grades.length - index,
+        timestamp: new Date(g.createdAt).toLocaleString(),
+        serial: g.serialNumber,
+        preset: g.ModelPreset ? `${g.ModelPreset.brand} ${g.ModelPreset.model}` : "Manual Entry",
+        cpu: g.cpu || "-",
+        ram: g.ramGb || "-",
+        ssd: g.ssdGb || "-",
+        battery: g.batteryHealthPercent === -1 ? "No Battery" : g.batteryHealthPercent,
+        author: g.User ? g.User.userName : "-",
+        touch: g.touchscreen ? "Enabled" : "Disabled",
+        obs: g.notes || ""
+      });
+    });
+
+    res.setHeader("Content-Disposition", `attachment; filename="history_export.${format}"`);
+
+    if (format === 'csv') {
+      res.setHeader("Content-Type", "text/csv");
+      await workbook.csv.write(res);
+    } else {
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      await workbook.xlsx.write(res);
+    }
+    res.end();
+  } catch (err) {
+    res.status(500).send("Export failed: " + err.message);
   }
 });
 

@@ -298,17 +298,24 @@ async function listPresetsFiltered(filters, activeOnly = true) {
 async function createPreset(body) {
   const rawBrand = body.brand === "OTHER" ? body.brandOther : body.brand;
   const brand = (rawBrand || "").trim();
-  const model = (body.model || "").trim();
+  let model = (body.model || "").trim();
 
   if (!brand) throw new Error("Brand is required.");
   if (!model) throw new Error("Model Name is required.");
 
   const rawRam = body.defaultRamGb === "OTHER" ? body.defaultRamGbOther : body.defaultRamGb;
   const deviceType = (body.deviceType === "DESKTOP") ? "DESKTOP" : "LAPTOP";
+  const formFactor = deviceType === "DESKTOP" ? (body.formFactor || null) : null;
+
+  if (deviceType === "DESKTOP" && formFactor) {
+    if (!model.includes(`(${formFactor})`)) {
+      model = `${model} ${formFactor}`; // Add form factor if not already there, example: Optiplex 9020 SFF
+    }
+  }
 
   await ModelPreset.create({
     deviceType,
-    formFactor: deviceType === "DESKTOP" ? (body.formFactor || null) : null,
+    formFactor,
     brand,
     model,
     observations: (body.observations || "").trim(),
@@ -323,17 +330,24 @@ async function createPreset(body) {
 async function updatePreset(id, body) {
   const rawBrand = body.brand === "OTHER" ? body.brandOther : body.brand;
   const brand = (rawBrand || "").trim();
-  const model = (body.model || "").trim();
+  let model = (body.model || "").trim();
 
   if (!brand) throw new Error("Brand is required.");
   if (!model) throw new Error("Model Name is required.");
 
   const rawRam = body.defaultRamGb === "OTHER" ? body.defaultRamGbOther : body.defaultRamGb;
   const deviceType = (body.deviceType === "DESKTOP") ? "DESKTOP" : "LAPTOP";
+  const formFactor = deviceType === "DESKTOP" ? (body.formFactor || null) : null;
+
+  if (deviceType === "DESKTOP" && formFactor) {
+    if (!model.includes(`(${formFactor})`)) {
+      model = `${model} ${formFactor}`; // example: SFF
+    }
+  }
 
   await ModelPreset.update({
     deviceType,
-    formFactor: deviceType === "DESKTOP" ? (body.formFactor || null) : null,
+    formFactor,
     brand,
     model,
     observations: (body.observations || "").trim(),
