@@ -183,10 +183,32 @@ app.post("/orders/new", ensureLogin, async (req, res) => {
       throw new Error("Must provide an Order ID or a Name for the order.");
     }
     const o = await lgs.createOrder(req.body);
-    // Redirect directly to grading with this order pre-selected
     res.redirect(`/grades/new?orderId=${o.id}`);
   } catch (err) {
     res.status(400).render("newOrder", { errorMessage: err.message || String(err), form: req.body });
+  }
+});
+
+app.post("/orders/delete/:id", ensureLogin, async (req, res) => {
+  try {
+    const username = (req.body.adminUsername || "").trim();
+    const password = req.body.adminPassword || "";
+
+    // Authenticate the provided credentials
+    const validUser = await lgs.authenticate(username, password);
+    if (!validUser) {
+      return res.status(403).render("500", { message: "Invalid Username or Password" });
+    }
+
+    // Verify the authenticated user actually has permission to delete orders
+    if (validUser.role !== "ADMIN" && !validUser.canDeleteOrder) {
+      return res.status(403).render("500", { message: "Permission Denied: Provided user cannot delete orders" });
+    }
+
+    await lgs.deleteOrder(req.params.id);
+    res.redirect("/grades");
+  } catch (err) {
+    res.status(500).render("500", { message: `Unable to delete order: ${err.message || err}` });
   }
 });
 
@@ -256,20 +278,22 @@ app.get("/grades", ensureLogin, async (req, res) => {
     let grades = [];
     let presets = [];
     let users = [];
+    let orders = [];
     let filters = {
       technician: req.query.technician || "",
       fromDate: req.query.fromDate || "",
       toDate: req.query.toDate || "",
       presetId: req.query.presetId || "",
-      orderQuery: req.query.orderQuery || "",
+      orderIdFilter: req.query.orderIdFilter || "",
       serialQuery: req.query.serialQuery || ""
     };
 
     presets = await lgs.listPresets(false);
     users = await lgs.listUsers();
+    orders = await lgs.listOrders();
     grades = await lgs.listGradesAdminFiltered(filters);
 
-    res.render("grades", { grades, presets, users, filters });
+    res.render("grades", { grades, presets, users, orders, filters });
   } catch (err) {
     res.status(500).render("500", { message: `Unable to load grades: ${err.message || err}` });
   }

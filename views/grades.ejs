@@ -41,8 +41,15 @@
           <form method="GET" action="/grades" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div class="form-control">
               <label class="label"><span class="label-text font-semibold">Order Name/ID</span></label>
-              <input type="text" name="orderQuery" class="input input-bordered input-sm" placeholder="Search order..."
-                value="<%= filters.orderQuery %>" />
+              <select name="orderIdFilter" class="select select-bordered select-sm">
+                <option value="">All Orders</option>
+                <% orders.forEach(o=> { %>
+                  <option value="<%= o.id %>" <%=(String(filters.orderIdFilter)===String(o.id)) ? "selected" : "" %> >
+                    <%= o.name ? o.name + (o.orderId ? ' (' + o.orderId + ')' : '' ) : (o.orderId || 'Order #' + o.id)
+                      %>
+                  </option>
+                  <% }); %>
+              </select>
             </div>
 
             <div class="form-control">
@@ -87,11 +94,62 @@
               <input type="date" name="toDate" class="input input-bordered input-sm" value="<%= filters.toDate %>" />
             </div>
 
-            <div class="flex items-end gap-2 shrink-0">
-              <button class="btn btn-sm btn-primary px-6 rounded-lg" type="submit">Find</button>
+            <div class="flex items-end gap-2 shrink-0 lg:col-span-1">
+              <button class="btn btn-sm btn-primary px-4 rounded-lg" type="submit">Find</button>
               <a class="btn btn-sm btn-ghost rounded-lg" href="/grades">Reset</a>
             </div>
           </form>
+
+          <% if (session && session.user && (session.user.role==='ADMIN' || session.user.canDeleteOrder)) { %>
+            <div class="flex justify-end mt-4 pt-4 border-t border-base-200">
+              <button class="btn btn-sm bg-[#8B0000] hover:bg-[#660000] border-none text-white rounded-lg px-6"
+                onclick="document.getElementById('delete-order-modal').showModal()">
+                Delete entire order
+              </button>
+            </div>
+
+            <dialog id="delete-order-modal" class="modal">
+              <div class="modal-box text-left max-w-sm">
+                <h3 class="font-bold text-lg text-error mb-4">Delete Entire Order</h3>
+                <p class="text-sm opacity-70 mb-4">Are you sure you want to delete an entire order and ALL of its
+                  recorded units? This action cannot be undone.</p>
+                <form id="deleteOrderForm" action="" method="POST" class="space-y-4">
+                  <div class="form-control">
+                    <label class="label"><span class="label-text font-bold">Select Order to Delete</span></label>
+                    <select id="deleteOrderId" required class="select select-bordered w-full">
+                      <option value="" disabled selected>Select an order...</option>
+                      <% orders.forEach(o=> { %>
+                        <option value="<%= o.id %>">
+                          <%= o.name ? o.name + (o.orderId ? ' (' + o.orderId + ')' : '' ) : (o.orderId || 'Order #' +
+                            o.id) %>
+                        </option>
+                        <% }); %>
+                    </select>
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text font-bold">Username</span></label>
+                    <input type="text" name="adminUsername" class="input input-bordered w-full" required
+                      autocomplete="off" placeholder="Enter authorized username">
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text font-bold">Password</span></label>
+                    <input type="password" name="adminPassword" class="input input-bordered w-full" required
+                      placeholder="Enter password to confirm">
+                  </div>
+                  <div class="modal-action mt-6">
+                    <button type="button" class="btn btn-ghost"
+                      onclick="document.getElementById('delete-order-modal').close()">Cancel</button>
+                    <button type="submit" class="btn btn-error text-white"
+                      onclick="document.getElementById('deleteOrderForm').action = '/orders/delete/' + document.getElementById('deleteOrderId').value">Delete
+                      Order</button>
+                  </div>
+                </form>
+              </div>
+              <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+              </form>
+            </dialog>
+            <% } %>
         </div>
       </div>
 
@@ -143,18 +201,24 @@
                     </div>
                   </td>
                   <td>
-                    <% let color="text-error" ; if (g.batteryHealthPercent>= 80) color = "text-success";
-                      else if (g.batteryHealthPercent >= 60) color = "text-warning";
-                      %>
-                      <div class="flex items-center gap-2">
-                        <div class="radial-progress <%= color %>"
-                          style="--value:<%= g.batteryHealthPercent %>; --size:1.8rem; --thickness: 2px;"
-                          role="progressbar">
-                          <span class="text-[10px] font-bold text-base-content">
-                            <%= g.batteryHealthPercent %>
-                          </span>
-                        </div>
+                    <% if (g.batteryHealthPercent===-1) { %>
+                      <div class="badge badge-error badge-outline badge-xs opacity-70 font-bold" title="No Battery">
+                        ✕
                       </div>
+                      <% } else { %>
+                        <% let color="text-error" ; if (g.batteryHealthPercent>= 80) color = "text-success";
+                          else if (g.batteryHealthPercent >= 60) color = "text-warning";
+                          %>
+                          <div class="flex items-center gap-2">
+                            <div class="radial-progress <%= color %>"
+                              style="--value:<%= g.batteryHealthPercent %>; --size:1.8rem; --thickness: 2px;"
+                              role="progressbar">
+                              <span class="text-[10px] font-bold text-base-content">
+                                <%= g.batteryHealthPercent %>
+                              </span>
+                            </div>
+                          </div>
+                          <% } %>
                   </td>
                   <td>
                     <div class="badge badge-outline badge-sm opacity-60">
@@ -167,11 +231,11 @@
                   </td>
                   <td>
                     <div class="flex gap-2">
-                      <button class="btn btn-ghost btn-xs text-info"
+                      <button class="btn btn-primary btn-xs text-white"
                         onclick="document.getElementById('edit-grade-<%= g.id %>').showModal()">Edit</button>
                       <form action="/grades/delete/<%= g.id %>" method="POST"
                         onsubmit="return confirm('Delete this grading entry?');">
-                        <button class="btn btn-ghost btn-xs text-error" type="submit">Delete</button>
+                        <button class="btn btn-error btn-xs text-white" type="submit">Delete</button>
                       </form>
                     </div>
 
@@ -201,8 +265,18 @@
                           </div>
                           <div class="form-control">
                             <label class="label"><span class="label-text">Battery Health %</span></label>
-                            <input type="number" name="batteryHealthPercent" value="<%= g.batteryHealthPercent %>"
-                              class="input input-bordered" required min="0" max="100">
+                            <input type="number" id="editHistoryBattery-<%= g.id %>" name="batteryHealthPercent"
+                              value="<%= g.batteryHealthPercent !== -1 ? g.batteryHealthPercent : '' %>"
+                              class="input input-bordered" <%=g.batteryHealthPercent===-1 ? 'disabled' : 'required' %>
+                            min="0" max="100">
+                            <label class="cursor-pointer label justify-start gap-2 mt-2">
+                              <input type="checkbox" name="noBattery" class="checkbox checkbox-sm checkbox-error"
+                                <%=g.batteryHealthPercent===-1 ? 'checked' : '' %>
+                              onchange="const el = document.getElementById('editHistoryBattery-<%= g.id %>');
+                                if(this.checked) { el.disabled = true; el.value = ''; el.required = false; } else {
+                                el.disabled = false; el.required = true; }" />
+                                <span class="label-text">No Battery</span>
+                            </label>
                           </div>
                           <div class="form-control">
                             <label class="label"><span class="label-text">Touchscreen</span></label>

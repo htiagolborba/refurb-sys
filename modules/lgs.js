@@ -111,20 +111,56 @@ async function initialize() {
   const isSqlite = process.env.USE_SQLITE === "true";
 
   if (isSqlite) {
-    // Manual column adds for SQLite because sync({alter: true}) is buggy with User table backup
+    // Manual column adds for SQLite because sync({alter: true}) is buggy
+    // We also need to fix NOT NULL columns that should be NULL (CPU, RAM, SSD)
     try {
-      await sequelize.query("ALTER TABLE ModelPresets ADD COLUMN formFactor TEXT;");
-    } catch (e) {
-      // column probably exists
+      await sequelize.query("PRAGMA foreign_keys = OFF;");
+
+      // 1. Ensure formFactor exists in ModelPresets
+      try { await sequelize.query("ALTER TABLE ModelPresets ADD COLUMN formFactor TEXT;"); } catch (e) { }
+
+      // 2. Fix ModelPresets nullability (CPU, RAM, SSD)
+      const [results] = await sequelize.query("PRAGMA table_info(ModelPresets);");
+      const cpuCol = results.find(r => r.name === "defaultCpu");
+      if (cpuCol && cpuCol.notnull === 1) {
+        console.log("Migrating ModelPresets for nullability...");
+        await sequelize.query("ALTER TABLE ModelPresets RENAME TO ModelPresets_old;");
+        await sequelize.sync(); // Create new table with current model
+        await sequelize.query(`
+          INSERT INTO ModelPresets (id, deviceType, brand, model, observations, defaultCpu, defaultRamGb, defaultSsdGb, defaultTouchscreen, active, createdAt, updatedAt, formFactor)
+          SELECT id, deviceType, brand, model, observations, defaultCpu, defaultRamGb, defaultSsdGb, defaultTouchscreen, active, createdAt, updatedAt, formFactor FROM ModelPresets_old;
+        `);
+        await sequelize.query("DROP TABLE ModelPresets_old;");
+      }
+
+      // 3. Fix LaptopGrades nullability (CPU, RAM)
+      const [gradesInfo] = await sequelize.query("PRAGMA table_info(LaptopGrades);");
+      const gradeCpuCol = gradesInfo.find(r => r.name === "cpu");
+      if (gradeCpuCol && gradeCpuCol.notnull === 1) {
+        console.log("Migrating LaptopGrades for nullability...");
+        await sequelize.query("ALTER TABLE LaptopGrades RENAME TO LaptopGrades_old;");
+        await sequelize.sync(); // Create new table with current model
+        await sequelize.query(`
+          INSERT INTO LaptopGrades (id, serialNumber, cpu, ramGb, ssdGb, touchscreen, batteryHealthPercent, notes, createdAt, updatedAt, createdByUserId, presetId, orderIdRef)
+          SELECT id, serialNumber, cpu, ramGb, ssdGb, touchscreen, batteryHealthPercent, notes, createdAt, updatedAt, createdByUserId, presetId, orderIdRef FROM LaptopGrades_old;
+        `);
+        await sequelize.query("DROP TABLE LaptopGrades_old;");
+      }
+
+      // 4. Ensure User permissions exist
+      const columns = ["canAddPreset", "canEditPreset", "canDeletePreset", "canAddOrder", "canEditOrder", "canDeleteOrder", "canAddUser", "canEditUser", "canDeleteUser"];
+      for (const col of columns) {
+        try {
+          await sequelize.query(`ALTER TABLE Users ADD COLUMN ${col} BOOLEAN DEFAULT 0;`);
+        } catch (e) { }
+      }
+
+      await sequelize.sync();
+      await sequelize.query("PRAGMA foreign_keys = ON;");
+    } catch (err) {
+      await sequelize.query("PRAGMA foreign_keys = ON;");
+      console.error("Migration error:", err);
     }
-    // Also ensure User permissions exist (in case partially migrated)
-    const columns = ["canAddPreset", "canEditPreset", "canDeletePreset", "canAddOrder", "canEditOrder", "canDeleteOrder", "canAddUser", "canEditUser", "canDeleteUser"];
-    for (const col of columns) {
-      try {
-        await sequelize.query(`ALTER TABLE Users ADD COLUMN ${col} BOOLEAN DEFAULT 0;`);
-      } catch (e) { }
-    }
-    await sequelize.sync();
   } else {
     // For PostgreSQL on Render, alter: true works correctly to add new columns
     await sequelize.sync({ alter: true });
@@ -339,9 +375,12 @@ async function createGrade(user, body) {
     (body.touchscreen !== undefined ? body.touchscreen : (preset ? preset.defaultTouchscreen : false))
   );
 
-  const battery = normalizeInt(body.batteryHealthPercent, -1);
-  if (battery < 0 || battery > 100) {
-    throw new Error("Battery Health must be between 0 and 100.");
+  let battery = -1;
+  if (!normalizeBool(body.noBattery)) {
+    battery = normalizeInt(body.batteryHealthPercent, -1);
+    if (battery < 0 || battery > 100) {
+      throw new Error("Battery Health must be between 0 and 100, or check 'No Battery'.");
+    }
   }
 
   const serialNumber = (body.serialNumber || "").trim();
@@ -396,21 +435,8 @@ async function listGradesForUser(user) {
 async function listGradesAdminFiltered(filters) {
   const where = {};
 
-  if (filters.orderQuery && filters.orderQuery.trim()) {
-    const q = filters.orderQuery.trim();
-    const isPostgres = sequelize.getDialect() === "postgres";
-    const op = isPostgres ? Sequelize.Op.iLike : Sequelize.Op.like;
-
-    const orders = await Order.findAll({
-      where: {
-        [Sequelize.Op.or]: [
-          { name: { [op]: `%${q}%` } },
-          { orderId: { [op]: `%${q}%` } }
-        ]
-      },
-      attributes: ["id"]
-    });
-    where.orderIdRef = { [Sequelize.Op.in]: orders.map(o => o.id) };
+  if (filters.orderIdFilter) {
+    where.orderIdRef = normalizeInt(filters.orderIdFilter, null);
   }
 
   if (filters.serialQuery && filters.serialQuery.trim()) {
@@ -459,13 +485,21 @@ async function listGradesAdminFiltered(filters) {
 }
 
 async function updateGrade(id, body) {
+  let battery = -1;
+  if (!normalizeBool(body.noBattery)) {
+    battery = normalizeInt(body.batteryHealthPercent, -1);
+    if (battery < 0 || battery > 100) {
+      throw new Error("Battery Health must be between 0 and 100, or check 'No Battery'.");
+    }
+  }
+
   await LaptopGrade.update({
     serialNumber: (body.serialNumber || "").trim(),
     cpu: (body.cpu || "").trim(),
     ramGb: normalizeInt(body.ramGb, 0),
     ssdGb: body.ssdGb ? normalizeInt(body.ssdGb, 0) : null,
     touchscreen: normalizeBool(body.touchscreen),
-    batteryHealthPercent: normalizeInt(body.batteryHealthPercent, 0),
+    batteryHealthPercent: battery,
     notes: (body.notes || "").trim()
   }, { where: { id } });
 }
@@ -493,6 +527,11 @@ async function listOrders() {
 async function getOrder(id) {
   const o = await Order.findByPk(id);
   return o ? o.toJSON() : null;
+}
+
+async function deleteOrder(id) {
+  await LaptopGrade.destroy({ where: { orderIdRef: id } });
+  await Order.destroy({ where: { id } });
 }
 
 module.exports = {
@@ -528,5 +567,6 @@ module.exports = {
   // orders
   createOrder,
   listOrders,
-  getOrder
+  getOrder,
+  deleteOrder
 };

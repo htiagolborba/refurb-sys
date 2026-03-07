@@ -158,11 +158,33 @@
                   <!-- Notes Card -->
                   <div class="card bg-white border border-base-200 shadow-sm">
                     <div class="card-body">
-                      <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Observations</h2>
+                      <div class="flex items-center justify-between mb-4">
+                        <h2 class="card-title text-sm uppercase tracking-widest opacity-50 m-0">Observations</h2>
+                        <button type="button" class="btn btn-xs btn-ghost text-red-500 hover:bg-base-200"
+                          onclick="document.getElementById('notes').value = ''; document.getElementById('notes').focus();">
+                          CLEAR
+                        </button>
+                      </div>
                       <div class="form-control">
                         <label class="label"><span class="label-text">Notes & Cosmetic Condition</span></label>
                         <textarea id="notes" name="notes" class="textarea textarea-bordered h-32 focus:textarea-primary"
                           placeholder="List any defects, scratches, or missing components..."><%= form.notes || '' %></textarea>
+                      </div>
+
+                      <div class="mt-4">
+                        <label class="label"><span class="label-text text-xs opacity-70">Quick Inserts</span></label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          <% const obs=["PEELING PR", "MISSING KEYS" , "PEELING KEYS" , "BROKEN SCREEN" , "NPO" , "W.S"
+                            , "MISSING FEED" , "SCRATCH ON BACK COVER" , "BROKEN USB" , "BROKEN HDMI" , "BROKEN CASE"
+                            , "SCRATCH ON SCREEN" ]; %>
+                            <% obs.forEach(term=> { %>
+                              <button type="button"
+                                class="btn btn-xs btn-outline btn-accent text-[11px] leading-tight h-auto py-1"
+                                onclick="const el = document.getElementById('notes'); el.value = el.value + (el.value ? ' ' : '') + '<%= term %>, '; el.focus();">
+                                <%= term %>
+                              </button>
+                              <% }); %>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -191,6 +213,12 @@
                             placeholder="0 - 100" value="<%= form.batteryHealthPercent || '' %>" />
                           <span class="btn join-item bg-base-200 text-base-content border-l-0">%</span>
                         </div>
+                        <label class="cursor-pointer label justify-start gap-2 mt-2">
+                          <input type="checkbox" name="noBattery" id="noBattery"
+                            class="checkbox checkbox-sm checkbox-accent bg-white"
+                            onchange="const el = document.getElementById('batteryHealthPercent'); if(this.checked) { el.disabled = true; el.value = ''; el.required = false; } else { el.disabled = false; el.required = true; }" />
+                          <span class="label-text text-primary-content">No Battery</span>
+                        </label>
                       </div>
 
                       <div class="card-actions flex-col gap-3">
@@ -221,6 +249,7 @@
                           <th class="w-12 text-center">#</th>
                           <th class="font-mono">Serial Number</th>
                           <th>Preset</th>
+                          <th>CPU</th>
                           <th>RAM</th>
                           <th>SSD</th>
                           <th>Battery</th>
@@ -252,16 +281,28 @@
                                   <% } %>
                             </td>
                             <td>
+                              <div class="text-[11px] opacity-70">
+                                <%= g.cpu || '-' %>
+                              </div>
+                            </td>
+                            <td>
                               <%= g.ramGb %>GB
                             </td>
                             <td>
                               <%= g.ssdGb ? g.ssdGb + 'GB' : '--' %>
                             </td>
                             <td>
-                              <div
-                                class="badge <%= g.batteryHealthPercent > 80 ? 'badge-success badge-outline' : (g.batteryHealthPercent > 50 ? 'badge-warning badge-outline' : 'badge-error badge-outline') %> badge-xs">
-                                <%= g.batteryHealthPercent %>%
-                              </div>
+                              <% if (g.batteryHealthPercent===-1) { %>
+                                <div class="badge badge-error badge-outline badge-xs opacity-70 font-bold"
+                                  title="No Battery">
+                                  ✕
+                                </div>
+                                <% } else { %>
+                                  <div
+                                    class="badge <%= g.batteryHealthPercent > 80 ? 'badge-success badge-outline' : (g.batteryHealthPercent > 50 ? 'badge-warning badge-outline' : 'badge-error badge-outline') %> badge-xs">
+                                    <%= g.batteryHealthPercent %>%
+                                  </div>
+                                  <% } %>
                             </td>
                             <td class="text-center">
                               <div
@@ -314,9 +355,20 @@
                                       </div>
                                       <div class="form-control">
                                         <label class="label"><span class="label-text">Battery %</span></label>
-                                        <input type="number" name="batteryHealthPercent"
-                                          value="<%= g.batteryHealthPercent %>" class="input input-bordered input-sm"
-                                          required min="0" max="100">
+                                        <input type="number" id="editBatteryHealth-<%= g.id %>"
+                                          name="batteryHealthPercent"
+                                          value="<%= g.batteryHealthPercent !== -1 ? g.batteryHealthPercent : '' %>"
+                                          class="input input-bordered input-sm" <%=g.batteryHealthPercent===-1
+                                          ? 'disabled' : 'required' %> min="0" max="100">
+                                        <label class="cursor-pointer label justify-start gap-2 mt-2">
+                                          <input type="checkbox" name="noBattery"
+                                            class="checkbox checkbox-sm checkbox-error" <%=g.batteryHealthPercent===-1
+                                            ? 'checked' : '' %>
+                                          onchange="const el = document.getElementById('editBatteryHealth-<%= g.id %>');
+                                            if(this.checked) { el.disabled = true; el.value = ''; el.required = false; }
+                                            else { el.disabled = false; el.required = true; }" />
+                                            <span class="label-text">No Battery</span>
+                                        </label>
                                       </div>
                                       <div class="form-control">
                                         <label class="label"><span class="label-text">Touchscreen</span></label>
