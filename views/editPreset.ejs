@@ -1,196 +1,232 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="winter">
+<%# LGS - Laptop Grading System Created by Hiran Tiago Lins Borba Oct 2025 - Mar 2026 License: This project is open
+  source. Contributions and suggestions are (always) welcome. %>
+  <!DOCTYPE html>
+  <html lang="en" data-theme="winter">
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add Preset - LGS System</title>
-  <link rel="stylesheet" href="/css/main.css">
-</head>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Preset - LGS System</title>
+    <link rel="stylesheet" href="/css/main.css">
+  </head>
 
-<body class="bg-base-100 min-h-screen">
-  <%- include('partials/navbar') %>
+  <body class="bg-base-100 min-h-screen">
+    <%- include('partials/navbar') %>
 
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-      <div class="mb-8 border-b border-base-200 pb-6">
-        <h1 class="text-3xl font-black tracking-tight">Configuration Presets</h1>
-        <p class="opacity-60">Define hardware standards for automated grading</p>
-      </div>
-
-      <% if (errorMessage) { %>
-        <div class="alert alert-error mb-6 rounded-xl shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>
-            <%= errorMessage %>
-          </span>
+      <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="mb-8 border-b border-base-200 pb-6">
+          <h1 class="text-3xl font-black tracking-tight">Configuration Presets</h1>
+          <p class="opacity-60">Define hardware standards for automated grading</p>
         </div>
-        <% } %>
 
-          <form action="/presets/edit/<%= preset.id %>" method="POST" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="card bg-white border border-base-200 shadow-sm">
-              <div class="card-body">
-                <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Manufacturer Info</h2>
+        <% if (errorMessage) { %>
+          <div class="alert alert-error mb-6 rounded-xl shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>
+              <%= errorMessage %>
+            </span>
+          </div>
+          <% } %>
 
-                <div class="form-control mb-4">
-                  <label class="label"><span class="label-text font-bold">Brand</span></label>
-                  <select id="brandSelect" name="brand" required class="select select-bordered w-full">
-                    <option value="" disabled <%=!form.brand ? "selected" : "" %>>Select manufacturer</option>
-                    <option value="Dell" <%=form.brand==="Dell" ? "selected" : "" %>>Dell</option>
-                    <option value="HP" <%=form.brand==="HP" ? "selected" : "" %>>HP</option>
-                    <option value="Lenovo" <%=form.brand==="Lenovo" ? "selected" : "" %>>Lenovo</option>
-                    <option value="Apple" <%=form.brand==="Apple" ? "selected" : "" %>>Apple</option>
-                    <option value="OTHER" <%=form.brandOther ? "selected" : "" %>>Other...</option>
-                  </select>
-                  <input id="brandOther" type="text" name="brandOther" class="input input-bordered w-full mt-3"
-                    placeholder="Type manufacturer name" value="<%= form.brandOther || '' %>" disabled />
-                </div>
-
-                <div class="form-control mb-4">
-                  <label class="label"><span class="label-text font-bold">Model Name</span></label>
-                  <input type="text" name="model" required class="input input-bordered w-full"
-                    placeholder="e.g. Latitude 7420" value="<%= form.model || '' %>" />
-                </div>
-
-                <div class="form-control">
-                  <label class="label"><span class="label-text font-bold">Chassis Type</span></label>
-                  <div class="flex gap-4">
-                    <label class="label cursor-pointer gap-2 border border-base-200 rounded-lg px-4 flex-1">
-                      <input type="radio" name="deviceType" value="LAPTOP" class="radio radio-primary"
-                        onclick="document.getElementById('formFactorSection').classList.add('hidden')"
-                        <%=(preset.deviceType==="LAPTOP" || !preset.deviceType) ? "checked" : "" %>>
-                      <span class="label-text">Laptop</span>
-                    </label>
-                    <label class="label cursor-pointer gap-2 border border-base-200 rounded-lg px-4 flex-1">
-                      <input type="radio" name="deviceType" value="DESKTOP" class="radio radio-primary"
-                        onclick="document.getElementById('formFactorSection').classList.remove('hidden')"
-                        <%=(preset.deviceType==="DESKTOP" ) ? "checked" : "" %>>
-                      <span class="label-text">Desktop</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div id="formFactorSection"
-                  class="form-control mt-4 <%= (preset.deviceType === 'DESKTOP') ? '' : 'hidden' %>">
-                  <label class="label">
-                    <span class="label-text font-bold">Form Factor</span>
-                    <span class="label-text-alt opacity-50">Optional</span>
-                  </label>
-                  <select name="formFactor" class="select select-bordered w-full">
-                    <option value="" <%=!preset.formFactor ? 'selected' : '' %>>None / Select...</option>
-                    <option value="USFF" <%=preset.formFactor==="USFF" ? "selected" : "" %>>USFF</option>
-                    <option value="SFF" <%=preset.formFactor==="SFF" ? "selected" : "" %>>SFF</option>
-                    <option value="Mini Tower" <%=preset.formFactor==="Mini Tower" ? "selected" : "" %>>Mini Tower
-                    </option>
-                    <option value="Tower" <%=preset.formFactor==="Tower" ? "selected" : "" %>>Tower</option>
-                    <option value="Workstation" <%=preset.formFactor==="Workstation" ? "selected" : "" %>>Workstation
-                    </option>
-                    <option value="AIO" <%=preset.formFactor==="AIO" ? "selected" : "" %>>AIO</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-8">
+            <form action="/presets/edit/<%= preset.id %>" method="POST" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div class="card bg-white border border-base-200 shadow-sm">
                 <div class="card-body">
-                  <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Default Specifications</h2>
+                  <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Manufacturer Info</h2>
 
                   <div class="form-control mb-4">
-                    <label class="label">
-                      <span class="label-text font-bold">Observations</span>
-                      <span class="label-text-alt opacity-50">Optional</span>
-                    </label>
-                    <textarea name="observations" class="textarea textarea-bordered w-full"
-                      placeholder="e.g. Scratched lid, specific notes..."><%= preset.observations || '' %></textarea>
+                    <label class="label"><span class="label-text font-bold">Brand</span></label>
+                    <select id="brandSelect" name="brand" required class="select select-bordered w-full">
+                      <option value="" disabled <%=!form.brand ? "selected" : "" %>>Select manufacturer</option>
+                      <option value="Dell" <%=form.brand==="Dell" ? "selected" : "" %>>Dell</option>
+                      <option value="HP" <%=form.brand==="HP" ? "selected" : "" %>>HP</option>
+                      <option value="Lenovo" <%=form.brand==="Lenovo" ? "selected" : "" %>>Lenovo</option>
+                      <option value="Apple" <%=form.brand==="Apple" ? "selected" : "" %>>Apple</option>
+                      <option value="OTHER" <%=form.brandOther ? "selected" : "" %>>Other...</option>
+                    </select>
+                    <input id="brandOther" type="text" name="brandOther" class="input input-bordered w-full mt-3"
+                      placeholder="Type manufacturer name" value="<%= form.brandOther || '' %>" disabled />
                   </div>
 
                   <div class="form-control mb-4">
-                    <label class="label"><span class="label-text font-bold">Processor (CPU)</span></label>
-                    <input type="text" name="defaultCpu" class="input input-bordered w-full"
-                      placeholder="e.g. Core i7-1185G7" value="<%= preset.defaultCpu || '' %>" />
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text font-bold">Memory (RAM)</span>
-                        <span class="label-text-alt opacity-50">Optional</span>
-                      </label>
-                      <select id="defaultRamSelect" name="defaultRamGb" class="select select-bordered w-full">
-                        <option value="" <%=!preset.defaultRamGb ? "selected" : "" %>>Select...</option>
-                        <option value="8" <%=String(preset.defaultRamGb)==="8" ? "selected" : "" %>>8 GB</option>
-                        <option value="16" <%=String(preset.defaultRamGb)==="16" ? "selected" : "" %>>16 GB</option>
-                        <option value="32" <%=String(preset.defaultRamGb)==="32" ? "selected" : "" %>>32 GB</option>
-                        <option value="64" <%=String(preset.defaultRamGb)==="64" ? "selected" : "" %>>64 GB</option>
-                        <% const isOtherRam=preset.defaultRamGb && !["8", "16" , "32" , "64"
-                          ].includes(String(preset.defaultRamGb)); %>
-                          <option value="OTHER" <%=isOtherRam ? "selected" : "" %>>Custom...</option>
-                      </select>
-                      <input id="defaultRamOther" type="number" name="defaultRamGbOther"
-                        class="input input-bordered w-full mt-2 input-sm" placeholder="GB"
-                        value="<%= isOtherRam ? preset.defaultRamGb : '' %>" disabled />
-                    </div>
-
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text font-bold">Storage (SSD)</span>
-                        <span class="label-text-alt opacity-50">Optional</span>
-                      </label>
-                      <div class="join">
-                        <input type="number" name="defaultSsdGb" class="input input-bordered w-full join-item"
-                          value="<%= preset.defaultSsdGb || '' %>" placeholder="256" />
-                        <span class="btn btn-disabled join-item no-animation">GB</span>
-                      </div>
-                    </div>
+                    <label class="label"><span class="label-text font-bold">Model Name</span></label>
+                    <input type="text" name="model" required class="input input-bordered w-full"
+                      placeholder="e.g. Latitude 7420" value="<%= form.model || '' %>" />
                   </div>
 
                   <div class="form-control">
-                    <label class="label cursor-pointer justify-start gap-3 border border-base-200 rounded-lg px-4 py-2">
-                      <input type="checkbox" name="defaultTouchscreen" class="checkbox checkbox-primary"
-                        <%=preset.defaultTouchscreen ? 'checked' : '' %> />
-                      <span class="label-text">Default with Touchscreen</span>
+                    <label class="label"><span class="label-text font-bold">Chassis Type</span></label>
+                    <div class="flex gap-4">
+                      <label class="label cursor-pointer gap-2 border border-base-200 rounded-lg px-4 flex-1">
+                        <input type="radio" name="deviceType" value="LAPTOP" class="radio radio-primary"
+                          onclick="document.getElementById('formFactorSection').classList.add('hidden')"
+                          <%=(preset.deviceType==="LAPTOP" || !preset.deviceType) ? "checked" : "" %>>
+                        <span class="label-text">Laptop</span>
+                      </label>
+                      <label class="label cursor-pointer gap-2 border border-base-200 rounded-lg px-4 flex-1">
+                        <input type="radio" name="deviceType" value="DESKTOP" class="radio radio-primary"
+                          onclick="document.getElementById('formFactorSection').classList.remove('hidden')"
+                          <%=(preset.deviceType==="DESKTOP" ) ? "checked" : "" %>>
+                        <span class="label-text">Desktop</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div id="formFactorSection"
+                    class="form-control mt-4 <%= (preset.deviceType === 'DESKTOP') ? '' : 'hidden' %>">
+                    <label class="label">
+                      <span class="label-text font-bold">Form Factor</span>
+                      <span class="label-text-alt opacity-50">Optional</span>
                     </label>
+                    <select name="formFactor" class="select select-bordered w-full">
+                      <option value="" <%=!preset.formFactor ? 'selected' : '' %>>None / Select...</option>
+                      <option value="USFF" <%=preset.formFactor==="USFF" ? "selected" : "" %>>USFF</option>
+                      <option value="SFF" <%=preset.formFactor==="SFF" ? "selected" : "" %>>SFF</option>
+                      <option value="Mini Tower" <%=preset.formFactor==="Mini Tower" ? "selected" : "" %>>Mini Tower
+                      </option>
+                      <option value="Tower" <%=preset.formFactor==="Tower" ? "selected" : "" %>>Tower</option>
+                      <option value="Workstation" <%=preset.formFactor==="Workstation" ? "selected" : "" %>>Workstation
+                      </option>
+                      <option value="AIO" <%=preset.formFactor==="AIO" ? "selected" : "" %>>AIO</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              <div class="flex gap-4">
-                <button type="submit" class="btn btn-primary flex-1 rounded-xl shadow-lg">Save Changes</button>
-                <a href="/presets" class="btn btn-ghost rounded-xl">Cancel</a>
+              <div class="space-y-8">
+                <div class="card bg-white border border-base-200 shadow-sm">
+                  <div class="card-body">
+                    <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Default Specifications</h2>
+
+                    <div class="form-control mb-4">
+                      <label class="label">
+                        <span class="label-text font-bold">Observations</span>
+                        <span class="label-text-alt opacity-50">Optional</span>
+                      </label>
+                      <textarea name="observations" class="textarea textarea-bordered w-full"
+                        placeholder="e.g. Scratched lid, specific notes..."><%= preset.observations || '' %></textarea>
+                    </div>
+
+                    <div class="form-control mb-4">
+                      <label class="label"><span class="label-text font-bold">Processor (CPU)</span></label>
+                      <input type="text" name="defaultCpu" class="input input-bordered w-full"
+                        placeholder="e.g. Core i7-1185G7" value="<%= preset.defaultCpu || '' %>" />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-bold">Memory (RAM)</span>
+                          <span class="label-text-alt opacity-50">Optional</span>
+                        </label>
+                        <select id="defaultRamSelect" name="defaultRamGb" class="select select-bordered w-full">
+                          <option value="" <%=!preset.defaultRamGb ? "selected" : "" %>>Select...</option>
+                          <option value="8" <%=String(preset.defaultRamGb)==="8" ? "selected" : "" %>>8 GB</option>
+                          <option value="16" <%=String(preset.defaultRamGb)==="16" ? "selected" : "" %>>16 GB</option>
+                          <option value="32" <%=String(preset.defaultRamGb)==="32" ? "selected" : "" %>>32 GB</option>
+                          <option value="64" <%=String(preset.defaultRamGb)==="64" ? "selected" : "" %>>64 GB</option>
+                          <% const isOtherRam=preset.defaultRamGb && !["8", "16" , "32" , "64"
+                            ].includes(String(preset.defaultRamGb)); %>
+                            <option value="OTHER" <%=isOtherRam ? "selected" : "" %>>Custom...</option>
+                        </select>
+                        <input id="defaultRamOther" type="number" name="defaultRamGbOther"
+                          class="input input-bordered w-full mt-2 input-sm" placeholder="GB"
+                          value="<%= isOtherRam ? preset.defaultRamGb : '' %>" disabled />
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-bold">Storage (SSD)</span>
+                          <span class="label-text-alt opacity-50">Optional</span>
+                        </label>
+                        <div class="join">
+                          <input type="number" name="defaultSsdGb" class="input input-bordered w-full join-item"
+                            value="<%= preset.defaultSsdGb || '' %>" placeholder="256" />
+                          <span class="btn btn-disabled join-item no-animation">GB</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-control mb-4">
+                      <label class="label"><span class="label-text font-bold">Touchscreen Status</span></label>
+                      <div class="flex flex-col gap-2 pl-2 border border-base-200 rounded-lg p-3">
+                        <label class="label cursor-pointer justify-start gap-3">
+                          <input type="checkbox" id="touch_working" name="touchscreen"
+                            class="checkbox checkbox-success checkbox-sm" <%=(preset.defaultTouchStatus==='WORKING' )
+                            ? 'checked' : '' %> onclick="uncheckOthers('touch_working')" />
+                          <span class="label-text">Enable Touchscreen</span>
+                        </label>
+                        <label class="label cursor-pointer justify-start gap-3">
+                          <input type="checkbox" id="touch_bad" name="touchscreenBad"
+                            class="checkbox checkbox-error checkbox-sm" <%=(preset.defaultTouchStatus==='BAD' )
+                            ? 'checked' : '' %> onclick="uncheckOthers('touch_bad')" />
+                          <span class="label-text">Bad Touchscreen</span>
+                        </label>
+                        <label class="label cursor-pointer justify-start gap-3">
+                          <input type="checkbox" id="touch_no" name="noTouchscreen"
+                            class="checkbox checkbox-neutral checkbox-sm" <%=(preset.defaultTouchStatus==='NONE' )
+                            ? 'checked' : '' %> onclick="uncheckOthers('touch_no')" />
+                          <span class="label-text">No Touchscreen</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="form-control mb-4">
+                      <label class="label"><span class="label-text font-bold">Keyboard Layout</span></label>
+                      <div class="pl-2 border border-base-200 rounded-lg p-3">
+                        <label class="label cursor-pointer justify-start gap-3">
+                          <input type="checkbox" name="frenchKeyboard" class="checkbox checkbox-primary checkbox-sm"
+                            <%=(preset.defaultKeyboardLayout==='French' ) ? 'checked' : '' %> />
+                          <span class="label-text">French Keyboard</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex gap-4">
+                  <button type="submit" class="btn btn-primary flex-1 rounded-xl shadow-lg">Save Changes</button>
+                  <a href="/presets" class="btn btn-ghost rounded-xl">Cancel</a>
+                </div>
               </div>
-            </div>
-          </form>
-    </div>
+            </form>
+      </div>
 
 
-    <script>
-      const brandSelect = document.getElementById("brandSelect");
-      const brandOther = document.getElementById("brandOther");
-      const ramSelect = document.getElementById("defaultRamSelect");
-      const ramOther = document.getElementById("defaultRamOther");
+      <script>
+        const brandSelect = document.getElementById("brandSelect");
+        const brandOther = document.getElementById("brandOther");
+        const ramSelect = document.getElementById("defaultRamSelect");
+        const ramOther = document.getElementById("defaultRamOther");
 
-      function syncBrandOtherState() {
-        const isOther = brandSelect.value === "OTHER";
-        brandOther.disabled = !isOther;
-        brandOther.required = isOther;
-        if (!isOther) brandOther.value = "";
-      }
+        function uncheckOthers(activeId) {
+          const ids = ['touch_working', 'touch_bad', 'touch_no'];
+          ids.forEach(id => {
+            if (id !== activeId) document.getElementById(id).checked = false;
+          });
+        }
 
-      function syncRamOtherState() {
-        const isOther = ramSelect.value === "OTHER";
-        ramOther.disabled = !isOther;
-        if (!isOther) ramOther.value = "";
-      }
+        function syncBrandOtherState() {
+          const isOther = brandSelect.value === "OTHER";
+          brandOther.disabled = !isOther;
+          brandOther.required = isOther;
+          if (!isOther) brandOther.value = "";
+        }
 
-      brandSelect.addEventListener("change", syncBrandOtherState);
-      ramSelect.addEventListener("change", syncRamOtherState);
-      window.addEventListener("load", syncRamOtherState);
-      window.addEventListener("load", syncBrandOtherState);
-    </script>
-</body>
+        function syncRamOtherState() {
+          const isOther = ramSelect.value === "OTHER";
+          ramOther.disabled = !isOther;
+          if (!isOther) ramOther.value = "";
+        }
 
-</html>
+        brandSelect.addEventListener("change", syncBrandOtherState);
+        ramSelect.addEventListener("change", syncRamOtherState);
+        window.addEventListener("load", syncRamOtherState);
+        window.addEventListener("load", syncBrandOtherState);
+      </script>
+  </body>
+
+  </html>

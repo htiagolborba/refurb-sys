@@ -1,95 +1,111 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="winter">
+<%# LGS - Laptop Grading System Created by Hiran Tiago Lins Borba Oct 2025 - Mar 2026 License: This project is open
+    source. Contributions and suggestions are (always) welcome. %>
+    <!DOCTYPE html>
+    <html lang="en" data-theme="winter">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - LGS</title>
-    <link rel="stylesheet" href="/css/main.css">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>About - LGS</title>
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
 
-<body>
-    <%- include('../partials/navbar') %>
+    <body>
+        <%- include('../partials/navbar') %>
 
-        <div class="container mx-auto px-4 py-12 max-w-4xl">
-            <div class="mb-12 text-center">
-                <h1 class="text-4xl font-black tracking-tight mb-4">About the System</h1>
-                <div class="w-24 h-1 bg-primary mx-auto rounded-full"></div>
-            </div>
+            <div class="container mx-auto px-4 py-12 max-w-4xl">
+                <div class="mb-12 text-center">
+                    <h1 class="text-4xl font-black tracking-tight mb-4">About the System</h1>
+                    <div class="w-24 h-1 bg-primary mx-auto rounded-full"></div>
+                </div>
 
-            <div class="grid grid-cols-1 gap-8">
-                <div class="card bg-white border border-base-200 shadow-sm overflow-hidden text-lg">
-                    <div class="card-body p-8 sm:p-12 prose prose-slate max-w-none">
-                        <h2 class="text-2xl font-bold text-primary mb-4">Laptop Grading System (LGS)</h2>
-                        <p>
-                            Laptop Grading System (LGS) is a lightweight web application designed to standardize laptop
-                            grading during the refurbishment workflow. It replaces scattered individual spreadsheets
-                            with a single, consistent process for capturing key device information—model and brand
-                            details, battery health, condition notes, and technician observations—in a way that is easy
-                            to use and simple to audit.
-                        </p>
+                <div class="grid grid-cols-1 gap-8">
+                    <div class="card bg-white border border-base-200 shadow-sm overflow-hidden text-lg">
+                        <div class="card-body p-8 sm:p-12 prose prose-slate max-w-none">
+                            <h2 class="text-2xl font-bold text-primary mb-4">Laptop Grading System (LGS)</h2>
+                            <p>
+                                Laptop Grading System (LGS) is a lightweight web application designed to standardize
+                                laptop
+                                grading during the refurbishment workflow. It replaces scattered individual spreadsheets
+                                with a single, consistent process for capturing key device information—model and brand
+                                details, battery health, condition notes, and technician observations—in a way that is
+                                easy
+                                to use and simple to audit.
+                            </p>
 
-                        <h3 class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
-                            Why LGS exists</h3>
-                        <p>
-                            In many refurb environments, grading is done in separate Excel files maintained by each
-                            technician. Over time, this leads to inconsistent formats, duplicated effort, missing
-                            details, and difficulty generating reliable summaries. LGS was created to bring grading into
-                            one shared system with a consistent structure and clearer traceability.
-                        </p>
+                            <h3
+                                class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
+                                Why LGS exists</h3>
+                            <p>
+                                In many refurb environments, grading is done in separate Excel files maintained by each
+                                technician. Over time, this leads to inconsistent formats, duplicated effort, missing
+                                details, and difficulty generating reliable summaries. LGS was created to bring grading
+                                into
+                                one shared system with a consistent structure and clearer traceability.
+                            </p>
 
-                        <h3 class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
-                            Key benefits</h3>
-                        <ul class="list-disc pl-5 space-y-2">
-                            <li><strong>Standardized grading:</strong> one format for everyone, reducing inconsistencies
-                            </li>
-                            <li><strong>Better traceability:</strong> entries are easier to review and follow over time
-                            </li>
-                            <li><strong>Faster handoff:</strong> cleaner information for QA, inventory, or downstream
-                                steps</li>
-                            <li><strong>Foundation for reporting:</strong> enables future dashboards and exports with
-                                consistent data</li>
-                        </ul>
+                            <h3
+                                class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
+                                Key benefits</h3>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li><strong>Standardized grading:</strong> one format for everyone, reducing
+                                    inconsistencies
+                                </li>
+                                <li><strong>Better traceability:</strong> entries are easier to review and follow over
+                                    time
+                                </li>
+                                <li><strong>Faster handoff:</strong> cleaner information for QA, inventory, or
+                                    downstream
+                                    steps</li>
+                                <li><strong>Foundation for reporting:</strong> enables future dashboards and exports
+                                    with
+                                    consistent data</li>
+                            </ul>
 
-                        <h3 class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
-                            Tech overview</h3>
-                        <p>
-                            LGS is built with <strong>Node.js + Express</strong>, <strong>EJS</strong> server-side
-                            rendering, <strong>PostgreSQL</strong>, and <strong>Tailwind CSS/DaisyUI</strong> for a
-                            clean internal-tool UI. It uses session-based authentication and secure password hashing.
-                        </p>
+                            <h3
+                                class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
+                                Tech overview</h3>
+                            <p>
+                                LGS is built with <strong>Node.js + Express</strong>, <strong>EJS</strong> server-side
+                                rendering, <strong>PostgreSQL</strong>, and <strong>Tailwind CSS/DaisyUI</strong> for a
+                                clean internal-tool UI. It uses session-based authentication and secure password
+                                hashing.
+                            </p>
 
-                        <h3 class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
-                            Open source & contributions</h3>
-                        <p>
-                            This project is open source and evolves based on real workflow needs. Suggestions and
-                            contributions are welcome, especially improvements that make grading faster, clearer, and
-                            more consistent for technicians.
-                        </p>
+                            <h3
+                                class="text-xl font-bold mt-8 mb-4 border-l-4 border-secondary pl-4 text-secondary-focus">
+                                Open source & contributions</h3>
+                            <p>
+                                This project is open source and evolves based on real workflow needs. Suggestions and
+                                contributions are welcome, especially improvements that make grading faster, clearer,
+                                and
+                                more consistent for technicians.
+                            </p>
 
-                        <div class="divider mt-12 mb-8"></div>
+                            <div class="divider mt-12 mb-8"></div>
 
-                        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm opacity-60">
-                            <div>
-                                <strong>Credits:</strong> Created and maintained by Hiran Tiago Lins Borba
+                            <div
+                                class="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm opacity-60">
+                                <div>
+                                    <strong>Credits:</strong> Created and maintained by Hiran Tiago Lins Borba
+                                </div>
+                                <div class="badge badge-outline">2025-2026</div>
                             </div>
-                            <div class="badge badge-outline">2025-2026</div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="mt-12 text-center">
-                <a href="/" class="btn btn-ghost">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Home
-                </a>
+                <div class="mt-12 text-center">
+                    <a href="/" class="btn btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Home
+                    </a>
+                </div>
             </div>
-        </div>
-</body>
+    </body>
 
-</html>
+    </html>

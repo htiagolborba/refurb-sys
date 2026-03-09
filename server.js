@@ -1,3 +1,13 @@
+/**
+ * LGS - Laptop Grading System
+ * Created by Hiran Tiago Lins Borba
+ * Oct 2025 - Mar 2026
+ *
+ * License: 
+ * This project is open source. 
+ * Contributions and suggestions are (always) welcome.
+ */
+
 const path = require("path");
 const express = require("express");
 const clientSessions = require("client-sessions");
@@ -329,14 +339,16 @@ app.get("/grades/export/:format", ensureLogin, async (req, res) => {
     const worksheet = workbook.addWorksheet('History Export');
 
     worksheet.columns = [
+      { header: 'ORDER', key: 'order', width: 15 },
       { header: '#', key: 'index', width: 5 },
-      { header: 'TIMESTAMP', key: 'timestamp', width: 20 },
+      { header: 'DATE', key: 'timestamp', width: 20 },
       { header: 'SERIAL NUMBER', key: 'serial', width: 15 },
       { header: 'PRESET', key: 'preset', width: 25 },
       { header: 'CPU', key: 'cpu', width: 20 },
       { header: 'RAM (GB)', key: 'ram', width: 10 },
       { header: 'SSD (GB)', key: 'ssd', width: 10 },
       { header: 'BATTERY (%)', key: 'battery', width: 15 },
+      { header: 'KEYBOARD', key: 'keyboard', width: 15 },
       { header: 'TECHNICIAN', key: 'author', width: 15 },
       { header: 'TOUCHSCREEN', key: 'touch', width: 15 },
       { header: 'OBSERVATIONS', key: 'obs', width: 40 }
@@ -359,6 +371,7 @@ app.get("/grades/export/:format", ensureLogin, async (req, res) => {
 
     grades.forEach((g, index) => {
       worksheet.addRow({
+        order: g.Order ? (g.Order.name || g.Order.orderId) : "-",
         index: grades.length - index,
         timestamp: new Date(g.createdAt).toLocaleString(),
         serial: g.serialNumber,
@@ -367,8 +380,9 @@ app.get("/grades/export/:format", ensureLogin, async (req, res) => {
         ram: g.ramGb || "-",
         ssd: g.ssdGb || "-",
         battery: g.batteryHealthPercent === -1 ? "No Battery" : g.batteryHealthPercent,
+        keyboard: g.keyboardLayout || "English",
         author: g.User ? g.User.userName : "-",
-        touch: g.touchscreen ? "Enabled" : "Disabled",
+        touch: g.touchStatus === 'WORKING' ? "GOOD" : (g.touchStatus === 'BAD' ? "BAD" : "NO"),
         obs: g.notes || ""
       });
     });

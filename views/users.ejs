@@ -1,291 +1,337 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="winter">
+<%# LGS - Laptop Grading System Created by Hiran Tiago Lins Borba Oct 2025 - Mar 2026 License: This project is open
+  source. Contributions and suggestions are (always) welcome. %>
+  <!DOCTYPE html>
+  <html lang="en" data-theme="winter">
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Users - LGS System</title>
-  <link rel="stylesheet" href="/css/main.css">
-</head>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - LGS System</title>
+    <link rel="stylesheet" href="/css/main.css">
+  </head>
 
-<body class="bg-base-100 min-h-screen">
-  <%- include('partials/navbar') %>
+  <body class="bg-base-100 min-h-screen">
+    <%- include('partials/navbar') %>
 
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h1 class="text-3xl font-black tracking-tight">Team Management</h1>
-          <p class="opacity-60 text-sm">Control access and roles for technicians</p>
-        </div>
-      </div>
-
-      <% if (errorMessage) { %>
-        <div class="alert alert-error mb-6 rounded-xl shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>
-            <%= errorMessage %>
-          </span>
-        </div>
-        <% } %>
-
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-1">
-              <div class="card bg-white border border-base-200 shadow-sm sticky top-8">
-                <div class="card-body p-6">
-                  <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Add Member</h2>
-
-                  <form action="/admin/users/add" method="POST" class="space-y-4">
-                    <div class="form-control">
-                      <label class="label"><span class="label-text font-bold">User Name</span></label>
-                      <input type="text" name="userName" class="input input-bordered w-full" placeholder="e.g. hborba"
-                        required />
-                    </div>
-
-                    <div class="form-control">
-                      <label class="label"><span class="label-text font-bold">Password</span></label>
-                      <input type="password" name="password" class="input input-bordered w-full" placeholder="••••••••"
-                        required />
-                    </div>
-
-                    <div class="form-control">
-                      <label class="label"><span class="label-text font-bold">Role</span></label>
-                      <select name="role" class="select select-bordered w-full">
-                        <option value="TECH" selected>TECH</option>
-                        <option value="ADMIN">ADMIN</option>
-                      </select>
-                    </div>
-
-                    <div class="divider text-xs opacity-50 uppercase tracking-widest">Permissions</div>
-
-                    <div class="grid grid-cols-1 gap-2 text-sm">
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canAddPreset" class="checkbox checkbox-xs">
-                        <span>Add Presets</span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canEditPreset" class="checkbox checkbox-xs">
-                        <span>Edit Presets</span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canDeletePreset" class="checkbox checkbox-xs">
-                        <span>Delete Presets</span>
-                      </label>
-                      <div class="divider my-1"></div>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canAddOrder" class="checkbox checkbox-xs">
-                        <span>New Order</span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canEditOrder" class="checkbox checkbox-xs">
-                        <span>Edit Order</span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canDeleteOrder" class="checkbox checkbox-xs">
-                        <span>Delete Order</span>
-                      </label>
-                      <div class="divider my-1"></div>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canAddUser" class="checkbox checkbox-xs">
-                        <span>Add Users</span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canEditUser" class="checkbox checkbox-xs">
-                        <span>Edit Users</span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="canDeleteUser" class="checkbox checkbox-xs">
-                        <span>Delete Users</span>
-                      </label>
-                    </div>
-
-                    <div class="form-control mt-6">
-                      <button class="btn btn-primary btn-block rounded-xl" type="submit">Create Account</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <div class="lg:col-span-3">
-              <div class="card bg-white border border-base-200 shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                  <table class="table table-zebra table-sm w-full">
-                    <thead class="bg-base-50">
-                      <tr>
-                        <th>Identity</th>
-                        <th>Role</th>
-                        <th>Permissions</th>
-                        <th>Status</th>
-                        <th class="text-right">Manage</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% users.forEach(u=> { %>
-                        <tr class="hover">
-                          <td class="flex items-center gap-3 py-4">
-                            <div class="avatar placeholder">
-                              <div class="bg-primary/10 text-primary rounded-full w-8 h-8 font-bold text-xs">
-                                <%= u.userName[0].toUpperCase() %>
-                              </div>
-                            </div>
-                            <span class="font-bold">
-                              <%= u.userName %>
-                            </span>
-                          </td>
-                          <td>
-                            <span
-                              class="badge badge-sm <%= u.role === 'ADMIN' ? 'badge-primary' : 'badge-ghost' %> font-mono">
-                              <%= u.role %>
-                            </span>
-                          </td>
-                          <td>
-                            <form action="/admin/users/permissions/<%= u.id %>" method="POST" id="form-perms-<%= u.id %>" class="flex flex-wrap gap-1 max-w-xs">
-                              <span class="badge badge-outline text-[9px] <%= u.canAddPreset ? 'badge-success' : 'opacity-30' %>" title="Add Preset">P+</span>
-                              <span class="badge badge-outline text-[9px] <%= u.canEditPreset ? 'badge-info' : 'opacity-30' %>" title="Edit Preset">Pe</span>
-                              <span class="badge badge-outline text-[9px] <%= u.canDeletePreset ? 'badge-error' : 'opacity-30' %>" title="Delete Preset">P-</span>
-                              
-                              <span class="badge badge-outline text-[9px] <%= u.canAddOrder ? 'badge-success' : 'opacity-30' %>" title="New Order">O+</span>
-                              <span class="badge badge-outline text-[9px] <%= u.canEditOrder ? 'badge-info' : 'opacity-30' %>" title="Edit Order">Oe</span>
-                              <span class="badge badge-outline text-[9px] <%= u.canDeleteOrder ? 'badge-error' : 'opacity-30' %>" title="Delete Order">O-</span>
-                              
-                              <span class="badge badge-outline text-[9px] <%= u.canAddUser ? 'badge-success' : 'opacity-30' %>" title="Add User">U+</span>
-                              <span class="badge badge-outline text-[9px] <%= u.canEditUser ? 'badge-info' : 'opacity-30' %>" title="Edit User">Ue</span>
-                              <span class="badge badge-outline text-[9px] <%= u.canDeleteUser ? 'badge-error' : 'opacity-30' %>" title="Delete User">U-</span>
-                              
-                              <button type="button" onclick="document.getElementById('modal-perms-<%= u.id %>').showModal()" class="btn btn-ghost btn-xs text-[10px] lowercase">edit</button>
-                            </form>
-                          </td>
-                          <td>
-                            <div class="flex items-center gap-2">
-                              <div class="w-1.5 h-1.5 rounded-full <%= u.active ? 'bg-success' : 'bg-error' %>"></div>
-                              <span class="text-[10px] uppercase tracking-wider font-semibold opacity-60">
-                                <%= u.active ? "Active" : "Disabled" %>
-                              </span>
-                            </div>
-                          </td>
-                          <td class="text-right">
-                            <div class="dropdown dropdown-left">
-                              <div tabindex="0" role="button" class="btn btn-ghost btn-xs">Options</div>
-                              <ul tabindex="0"
-                                class="dropdown-content z-[1] menu p-2 shadow-xl bg-base-100 rounded-box w-52 border border-base-200">
-                                <li>
-                                  <% if (u.active) { %>
-                                    <a class="text-error font-semibold" href="/admin/users/disable/<%= u.id %>">Disable
-                                      Access</a>
-                                    <% } else { %>
-                                      <a class="text-success font-semibold"
-                                        href="/admin/users/enable/<%= u.id %>">Restore Access</a>
-                                      <% } %>
-                                </li>
-                                <div class="divider my-0"></div>
-                                <li><a href="/admin/users/role/<%= u.id %>?role=TECH">Set as TECHNICIAN</a></li>
-                                <li><a href="/admin/users/role/<%= u.id %>?role=ADMIN">Set as ADMINISTRATOR</a></li>
-                                <div class="divider my-0"></div>
-                                <li><button type="button" onclick="document.getElementById('modal-pass-<%= u.id %>').showModal()">Change Password</button></li>
-                                <li><button type="button" onclick="document.getElementById('modal-del-<%= u.id %>').showModal()" class="text-error">Delete User</button></li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-
-                        <!-- Permissions Modal -->
-                        <dialog id="modal-perms-<%= u.id %>" class="modal">
-                          <div class="modal-box">
-                            <h3 class="font-bold text-lg">Modify Permissions: <%= u.userName %></h3>
-                            <form action="/admin/users/permissions/<%= u.id %>" method="POST" class="py-4 grid grid-cols-2 gap-4">
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canAddPreset" class="checkbox checkbox-sm" <%= u.canAddPreset ? 'checked' : '' %>>
-                                <span>Add Presets</span>
-                              </label>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canEditPreset" class="checkbox checkbox-sm" <%= u.canEditPreset ? 'checked' : '' %>>
-                                <span>Edit Presets</span>
-                              </label>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canDeletePreset" class="checkbox checkbox-sm" <%= u.canDeletePreset ? 'checked' : '' %>>
-                                <span>Delete Presets</span>
-                              </label>
-                              <div class="col-span-2 divider my-0"></div>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canAddOrder" class="checkbox checkbox-sm" <%= u.canAddOrder ? 'checked' : '' %>>
-                                <span>New Order</span>
-                              </label>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canEditOrder" class="checkbox checkbox-sm" <%= u.canEditOrder ? 'checked' : '' %>>
-                                <span>Edit Order</span>
-                              </label>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canDeleteOrder" class="checkbox checkbox-sm" <%= u.canDeleteOrder ? 'checked' : '' %>>
-                                <span>Delete Order</span>
-                              </label>
-                              <div class="col-span-2 divider my-0"></div>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canAddUser" class="checkbox checkbox-sm" <%= u.canAddUser ? 'checked' : '' %>>
-                                <span>Add Users</span>
-                              </label>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canEditUser" class="checkbox checkbox-sm" <%= u.canEditUser ? 'checked' : '' %>>
-                                <span>Edit Users</span>
-                              </label>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="canDeleteUser" class="checkbox checkbox-sm" <%= u.canDeleteUser ? 'checked' : '' %>>
-                                <span>Delete Users</span>
-                              </label>
-                              <div class="modal-action col-span-2">
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                                <button type="button" onclick="this.closest('dialog').close()" class="btn">Cancel</button>
-                              </div>
-                            </form>
-                          </div>
-                        </dialog>
-
-                        <!-- Password Modal -->
-                        <dialog id="modal-pass-<%= u.id %>" class="modal">
-                          <div class="modal-box">
-                            <h3 class="font-bold text-lg">Reset Password: <%= u.userName %></h3>
-                            <form action="/admin/users/password/<%= u.id %>" method="POST" class="py-4">
-                              <div class="form-control">
-                                <label class="label"><span class="label-text">New Password</span></label>
-                                <input type="password" name="newPassword" class="input input-bordered" required>
-                              </div>
-                              <div class="modal-action">
-                                <button type="submit" class="btn btn-primary">Update Password</button>
-                                <button type="button" onclick="this.closest('dialog').close()" class="btn">Cancel</button>
-                              </div>
-                            </form>
-                          </div>
-                        </dialog>
-
-                        <!-- Delete Modal -->
-                        <dialog id="modal-del-<%= u.id %>" class="modal">
-                          <div class="modal-box">
-                            <h3 class="font-bold text-lg text-error">Danger Zone</h3>
-                            <p class="py-4">Are you sure you want to permanently delete user <strong><%= u.userName %></strong>? This action cannot be undone.</p>
-                            <form action="/admin/users/delete/<%= u.id %>" method="POST" class="modal-action">
-                              <button type="submit" class="btn btn-error">Yes, Delete</button>
-                              <button type="button" onclick="this.closest('dialog').close()" class="btn">Cancel</button>
-                            </form>
-                          </div>
-                        </dialog>
-
-                        <% }); %>
-
-                          <% if (!users || users.length===0) { %>
-                            <tr>
-                              <td colspan="5" class="text-center py-12 opacity-40">No team members identified yet.</td>
-                            </tr>
-                            <% } %>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+      <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h1 class="text-3xl font-black tracking-tight">Team Management</h1>
+            <p class="opacity-60 text-sm">Control access and roles for technicians</p>
           </div>
-    </div>
-</body>
+        </div>
 
-</html>
+        <% if (errorMessage) { %>
+          <div class="alert alert-error mb-6 rounded-xl shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>
+              <%= errorMessage %>
+            </span>
+          </div>
+          <% } %>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div class="lg:col-span-1">
+                <div class="card bg-white border border-base-200 shadow-sm sticky top-8">
+                  <div class="card-body p-6">
+                    <h2 class="card-title text-sm uppercase tracking-widest opacity-50 mb-4">Add Member</h2>
+
+                    <form action="/admin/users/add" method="POST" class="space-y-4">
+                      <div class="form-control">
+                        <label class="label"><span class="label-text font-bold">User Name</span></label>
+                        <input type="text" name="userName" class="input input-bordered w-full" placeholder="e.g. hborba"
+                          required />
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label"><span class="label-text font-bold">Password</span></label>
+                        <input type="password" name="password" class="input input-bordered w-full"
+                          placeholder="••••••••" required />
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label"><span class="label-text font-bold">Role</span></label>
+                        <select name="role" class="select select-bordered w-full">
+                          <option value="TECH" selected>TECH</option>
+                          <option value="ADMIN">ADMIN</option>
+                        </select>
+                      </div>
+
+                      <div class="divider text-xs opacity-50 uppercase tracking-widest">Permissions</div>
+
+                      <div class="grid grid-cols-1 gap-2 text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canAddPreset" class="checkbox checkbox-xs">
+                          <span>Add Presets</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canEditPreset" class="checkbox checkbox-xs">
+                          <span>Edit Presets</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canDeletePreset" class="checkbox checkbox-xs">
+                          <span>Delete Presets</span>
+                        </label>
+                        <div class="divider my-1"></div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canAddOrder" class="checkbox checkbox-xs">
+                          <span>New Order</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canEditOrder" class="checkbox checkbox-xs">
+                          <span>Edit Order</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canDeleteOrder" class="checkbox checkbox-xs">
+                          <span>Delete Order</span>
+                        </label>
+                        <div class="divider my-1"></div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canAddUser" class="checkbox checkbox-xs">
+                          <span>Add Users</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canEditUser" class="checkbox checkbox-xs">
+                          <span>Edit Users</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" name="canDeleteUser" class="checkbox checkbox-xs">
+                          <span>Delete Users</span>
+                        </label>
+                      </div>
+
+                      <div class="form-control mt-6">
+                        <button class="btn btn-primary btn-block rounded-xl" type="submit">Create Account</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-3">
+                <div class="card bg-white border border-base-200 shadow-sm overflow-hidden">
+                  <div class="overflow-x-auto">
+                    <table class="table table-zebra table-sm w-full">
+                      <thead class="bg-base-50">
+                        <tr>
+                          <th>Identity</th>
+                          <th>Role</th>
+                          <th>Permissions</th>
+                          <th>Status</th>
+                          <th class="text-right">Manage</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% users.forEach(u=> { %>
+                          <tr class="hover">
+                            <td class="flex items-center gap-3 py-4">
+                              <div class="avatar placeholder">
+                                <div class="bg-primary/10 text-primary rounded-full w-8 h-8 font-bold text-xs">
+                                  <%= u.userName[0].toUpperCase() %>
+                                </div>
+                              </div>
+                              <span class="font-bold">
+                                <%= u.userName %>
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                class="badge badge-sm <%= u.role === 'ADMIN' ? 'badge-primary' : 'badge-ghost' %> font-mono">
+                                <%= u.role %>
+                              </span>
+                            </td>
+                            <td>
+                              <form action="/admin/users/permissions/<%= u.id %>" method="POST"
+                                id="form-perms-<%= u.id %>" class="flex flex-wrap gap-1 max-w-xs">
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canAddPreset ? 'badge-success' : 'opacity-30' %>"
+                                  title="Add Preset">P+</span>
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canEditPreset ? 'badge-info' : 'opacity-30' %>"
+                                  title="Edit Preset">Pe</span>
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canDeletePreset ? 'badge-error' : 'opacity-30' %>"
+                                  title="Delete Preset">P-</span>
+
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canAddOrder ? 'badge-success' : 'opacity-30' %>"
+                                  title="New Order">O+</span>
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canEditOrder ? 'badge-info' : 'opacity-30' %>"
+                                  title="Edit Order">Oe</span>
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canDeleteOrder ? 'badge-error' : 'opacity-30' %>"
+                                  title="Delete Order">O-</span>
+
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canAddUser ? 'badge-success' : 'opacity-30' %>"
+                                  title="Add User">U+</span>
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canEditUser ? 'badge-info' : 'opacity-30' %>"
+                                  title="Edit User">Ue</span>
+                                <span
+                                  class="badge badge-outline text-[9px] <%= u.canDeleteUser ? 'badge-error' : 'opacity-30' %>"
+                                  title="Delete User">U-</span>
+
+                                <button type="button"
+                                  onclick="document.getElementById('modal-perms-<%= u.id %>').showModal()"
+                                  class="btn btn-ghost btn-xs text-[10px] lowercase">edit</button>
+                              </form>
+                            </td>
+                            <td>
+                              <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full <%= u.active ? 'bg-success' : 'bg-error' %>"></div>
+                                <span class="text-[10px] uppercase tracking-wider font-semibold opacity-60">
+                                  <%= u.active ? "Active" : "Disabled" %>
+                                </span>
+                              </div>
+                            </td>
+                            <td class="text-right">
+                              <div class="dropdown dropdown-left">
+                                <div tabindex="0" role="button" class="btn btn-ghost btn-xs">Options</div>
+                                <ul tabindex="0"
+                                  class="dropdown-content z-[1] menu p-2 shadow-xl bg-base-100 rounded-box w-52 border border-base-200">
+                                  <li>
+                                    <% if (u.active) { %>
+                                      <a class="text-error font-semibold"
+                                        href="/admin/users/disable/<%= u.id %>">Disable
+                                        Access</a>
+                                      <% } else { %>
+                                        <a class="text-success font-semibold"
+                                          href="/admin/users/enable/<%= u.id %>">Restore Access</a>
+                                        <% } %>
+                                  </li>
+                                  <div class="divider my-0"></div>
+                                  <li><a href="/admin/users/role/<%= u.id %>?role=TECH">Set as TECHNICIAN</a></li>
+                                  <li><a href="/admin/users/role/<%= u.id %>?role=ADMIN">Set as ADMINISTRATOR</a></li>
+                                  <div class="divider my-0"></div>
+                                  <li><button type="button"
+                                      onclick="document.getElementById('modal-pass-<%= u.id %>').showModal()">Change
+                                      Password</button></li>
+                                  <li><button type="button"
+                                      onclick="document.getElementById('modal-del-<%= u.id %>').showModal()"
+                                      class="text-error">Delete User</button></li>
+                                </ul>
+                              </div>
+                            </td>
+                          </tr>
+
+                          <!-- Permissions Modal -->
+                          <dialog id="modal-perms-<%= u.id %>" class="modal">
+                            <div class="modal-box">
+                              <h3 class="font-bold text-lg">Modify Permissions: <%= u.userName %>
+                              </h3>
+                              <form action="/admin/users/permissions/<%= u.id %>" method="POST"
+                                class="py-4 grid grid-cols-2 gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canAddPreset" class="checkbox checkbox-sm"
+                                    <%=u.canAddPreset ? 'checked' : '' %>>
+                                  <span>Add Presets</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canEditPreset" class="checkbox checkbox-sm"
+                                    <%=u.canEditPreset ? 'checked' : '' %>>
+                                  <span>Edit Presets</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canDeletePreset" class="checkbox checkbox-sm"
+                                    <%=u.canDeletePreset ? 'checked' : '' %>>
+                                  <span>Delete Presets</span>
+                                </label>
+                                <div class="col-span-2 divider my-0"></div>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canAddOrder" class="checkbox checkbox-sm"
+                                    <%=u.canAddOrder ? 'checked' : '' %>>
+                                  <span>New Order</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canEditOrder" class="checkbox checkbox-sm"
+                                    <%=u.canEditOrder ? 'checked' : '' %>>
+                                  <span>Edit Order</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canDeleteOrder" class="checkbox checkbox-sm"
+                                    <%=u.canDeleteOrder ? 'checked' : '' %>>
+                                  <span>Delete Order</span>
+                                </label>
+                                <div class="col-span-2 divider my-0"></div>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canAddUser" class="checkbox checkbox-sm" <%=u.canAddUser
+                                    ? 'checked' : '' %>>
+                                  <span>Add Users</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canEditUser" class="checkbox checkbox-sm"
+                                    <%=u.canEditUser ? 'checked' : '' %>>
+                                  <span>Edit Users</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                  <input type="checkbox" name="canDeleteUser" class="checkbox checkbox-sm"
+                                    <%=u.canDeleteUser ? 'checked' : '' %>>
+                                  <span>Delete Users</span>
+                                </label>
+                                <div class="modal-action col-span-2">
+                                  <button type="submit" class="btn btn-primary">Save Changes</button>
+                                  <button type="button" onclick="this.closest('dialog').close()"
+                                    class="btn">Cancel</button>
+                                </div>
+                              </form>
+                            </div>
+                          </dialog>
+
+                          <!-- Password Modal -->
+                          <dialog id="modal-pass-<%= u.id %>" class="modal">
+                            <div class="modal-box">
+                              <h3 class="font-bold text-lg">Reset Password: <%= u.userName %>
+                              </h3>
+                              <form action="/admin/users/password/<%= u.id %>" method="POST" class="py-4">
+                                <div class="form-control">
+                                  <label class="label"><span class="label-text">New Password</span></label>
+                                  <input type="password" name="newPassword" class="input input-bordered" required>
+                                </div>
+                                <div class="modal-action">
+                                  <button type="submit" class="btn btn-primary">Update Password</button>
+                                  <button type="button" onclick="this.closest('dialog').close()"
+                                    class="btn">Cancel</button>
+                                </div>
+                              </form>
+                            </div>
+                          </dialog>
+
+                          <!-- Delete Modal -->
+                          <dialog id="modal-del-<%= u.id %>" class="modal">
+                            <div class="modal-box">
+                              <h3 class="font-bold text-lg text-error">Danger Zone</h3>
+                              <p class="py-4">Are you sure you want to permanently delete user <strong>
+                                  <%= u.userName %>
+                                </strong>? This action cannot be undone.</p>
+                              <form action="/admin/users/delete/<%= u.id %>" method="POST" class="modal-action">
+                                <button type="submit" class="btn btn-error">Yes, Delete</button>
+                                <button type="button" onclick="this.closest('dialog').close()"
+                                  class="btn">Cancel</button>
+                              </form>
+                            </div>
+                          </dialog>
+
+                          <% }); %>
+
+                            <% if (!users || users.length===0) { %>
+                              <tr>
+                                <td colspan="5" class="text-center py-12 opacity-40">No team members identified yet.
+                                </td>
+                              </tr>
+                              <% } %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+      </div>
+  </body>
+
+  </html>

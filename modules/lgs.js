@@ -1,3 +1,13 @@
+/**
+ * LGS - Laptop Grading System
+ * Created by Hiran Tiago Lins Borba
+ * Oct 2025 - Mar 2026
+ *
+ * License: 
+ * This project is open source. 
+ * Contributions and suggestions are (always) welcome.
+ */
+
 require("dotenv").config();
 const Sequelize = require("sequelize");
 const bcrypt = require("bcryptjs");
@@ -68,7 +78,9 @@ const ModelPreset = sequelize.define("ModelPreset", {
   defaultCpu: { type: Sequelize.STRING, allowNull: true },
   defaultRamGb: { type: Sequelize.INTEGER, allowNull: true },
   defaultSsdGb: { type: Sequelize.INTEGER, allowNull: true },   // Now optional
-  defaultTouchscreen: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+  defaultTouchscreen: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false }, // Legacy
+  defaultTouchStatus: { type: Sequelize.STRING, defaultValue: "NONE" },
+  defaultKeyboardLayout: { type: Sequelize.STRING, defaultValue: "English" },
   active: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: true }
 }, { timestamps: true });
 
@@ -85,7 +97,9 @@ const LaptopGrade = sequelize.define("LaptopGrade", {
   cpu: { type: Sequelize.STRING, allowNull: true },
   ramGb: { type: Sequelize.INTEGER, allowNull: true },
   ssdGb: { type: Sequelize.INTEGER, allowNull: true },
-  touchscreen: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+  touchscreen: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false }, // Legacy
+  touchStatus: { type: Sequelize.STRING, defaultValue: "NONE" },
+  keyboardLayout: { type: Sequelize.STRING, defaultValue: "English" },
   batteryHealthPercent: { type: Sequelize.INTEGER, allowNull: false },
   notes: { type: Sequelize.TEXT, allowNull: false, defaultValue: "" }
 }, { timestamps: true });
@@ -116,8 +130,18 @@ async function initialize() {
     try {
       await sequelize.query("PRAGMA foreign_keys = OFF;");
 
-      // 1. Ensure formFactor exists in ModelPresets
+      // 1. Ensure formFactor and new fields exist in ModelPresets
       try { await sequelize.query("ALTER TABLE ModelPresets ADD COLUMN formFactor TEXT;"); } catch (e) { }
+      try { await sequelize.query("ALTER TABLE ModelPresets ADD COLUMN defaultTouchStatus VARCHAR(255) DEFAULT 'NONE';"); } catch (e) { }
+      try { await sequelize.query("ALTER TABLE ModelPresets ADD COLUMN defaultKeyboardLayout VARCHAR(255) DEFAULT 'English';"); } catch (e) { }
+
+      // 1.5. Ensure new fields exist in LaptopGrades
+      try { await sequelize.query("ALTER TABLE LaptopGrades ADD COLUMN touchStatus VARCHAR(255) DEFAULT 'NONE';"); } catch (e) { }
+      try { await sequelize.query("ALTER TABLE LaptopGrades ADD COLUMN keyboardLayout VARCHAR(255) DEFAULT 'English';"); } catch (e) { }
+
+      // Map legacy touchscreen booleans to touchStatus ONLY IF touchStatus is NONE (to not overwrite future changes if this re-runs)
+      try { await sequelize.query("UPDATE LaptopGrades SET touchStatus = 'WORKING' WHERE touchscreen = 1 AND touchStatus = 'NONE';"); } catch (e) { }
+      try { await sequelize.query("UPDATE ModelPresets SET defaultTouchStatus = 'WORKING' WHERE defaultTouchscreen = 1 AND defaultTouchStatus = 'NONE';"); } catch (e) { }
 
       // 2. Fix ModelPresets nullability (CPU, RAM, SSD)
       const [results] = await sequelize.query("PRAGMA table_info(ModelPresets);");
@@ -127,8 +151,8 @@ async function initialize() {
         await sequelize.query("ALTER TABLE ModelPresets RENAME TO ModelPresets_old;");
         await sequelize.sync(); // Create new table with current model
         await sequelize.query(`
-          INSERT INTO ModelPresets (id, deviceType, brand, model, observations, defaultCpu, defaultRamGb, defaultSsdGb, defaultTouchscreen, active, createdAt, updatedAt, formFactor)
-          SELECT id, deviceType, brand, model, observations, defaultCpu, defaultRamGb, defaultSsdGb, defaultTouchscreen, active, createdAt, updatedAt, formFactor FROM ModelPresets_old;
+          INSERT INTO ModelPresets (id, deviceType, brand, model, observations, defaultCpu, defaultRamGb, defaultSsdGb, defaultTouchscreen, defaultTouchStatus, defaultKeyboardLayout, active, createdAt, updatedAt, formFactor)
+          SELECT id, deviceType, brand, model, observations, defaultCpu, defaultRamGb, defaultSsdGb, defaultTouchscreen, defaultTouchStatus, defaultKeyboardLayout, active, createdAt, updatedAt, formFactor FROM ModelPresets_old;
         `);
         await sequelize.query("DROP TABLE ModelPresets_old;");
       }
@@ -141,8 +165,8 @@ async function initialize() {
         await sequelize.query("ALTER TABLE LaptopGrades RENAME TO LaptopGrades_old;");
         await sequelize.sync(); // Create new table with current model
         await sequelize.query(`
-          INSERT INTO LaptopGrades (id, serialNumber, cpu, ramGb, ssdGb, touchscreen, batteryHealthPercent, notes, createdAt, updatedAt, createdByUserId, presetId, orderIdRef)
-          SELECT id, serialNumber, cpu, ramGb, ssdGb, touchscreen, batteryHealthPercent, notes, createdAt, updatedAt, createdByUserId, presetId, orderIdRef FROM LaptopGrades_old;
+          INSERT INTO LaptopGrades (id, serialNumber, cpu, ramGb, ssdGb, touchscreen, touchStatus, keyboardLayout, batteryHealthPercent, notes, createdAt, updatedAt, createdByUserId, presetId, orderIdRef)
+          SELECT id, serialNumber, cpu, ramGb, ssdGb, touchscreen, touchStatus, keyboardLayout, batteryHealthPercent, notes, createdAt, updatedAt, createdByUserId, presetId, orderIdRef FROM LaptopGrades_old;
         `);
         await sequelize.query("DROP TABLE LaptopGrades_old;");
       }
@@ -295,6 +319,13 @@ async function listPresetsFiltered(filters, activeOnly = true) {
   return presets.map(p => p.toJSON());
 }
 
+function determineTouchStatus(body) {
+  if (normalizeBool(body.touchscreen)) return "WORKING";
+  if (normalizeBool(body.touchscreenBad)) return "BAD";
+  if (normalizeBool(body.noTouchscreen)) return "NONE";
+  return "";
+}
+
 async function createPreset(body) {
   const rawBrand = body.brand === "OTHER" ? body.brandOther : body.brand;
   const brand = (rawBrand || "").trim();
@@ -322,7 +353,9 @@ async function createPreset(body) {
     defaultCpu: (body.defaultCpu || null),
     defaultRamGb: rawRam ? normalizeInt(rawRam, 0) : null,
     defaultSsdGb: body.defaultSsdGb ? normalizeInt(body.defaultSsdGb, 0) : null,
-    defaultTouchscreen: normalizeBool(body.defaultTouchscreen),
+    defaultTouchscreen: normalizeBool(body.touchscreen), // legacy
+    defaultTouchStatus: determineTouchStatus(body),
+    defaultKeyboardLayout: normalizeBool(body.frenchKeyboard) ? "French" : "English",
     active: true
   });
 }
@@ -354,7 +387,9 @@ async function updatePreset(id, body) {
     defaultCpu: (body.defaultCpu || null),
     defaultRamGb: rawRam ? normalizeInt(rawRam, 0) : null,
     defaultSsdGb: body.defaultSsdGb ? normalizeInt(body.defaultSsdGb, 0) : null,
-    defaultTouchscreen: normalizeBool(body.defaultTouchscreen)
+    defaultTouchscreen: normalizeBool(body.touchscreen), // legacy
+    defaultTouchStatus: determineTouchStatus(body),
+    defaultKeyboardLayout: normalizeBool(body.frenchKeyboard) ? "French" : "English"
   }, { where: { id: id } });
 }
 
@@ -385,9 +420,22 @@ async function createGrade(user, body) {
   const ramGb = normalizeInt(body.ramGb, preset ? preset.defaultRamGb : 0);
   const ssdFallback = preset ? preset.defaultSsdGb : null;
   const ssdGb = body.ssdGb ? normalizeInt(body.ssdGb, ssdFallback) : ssdFallback;
-  const touchscreen = normalizeBool(
-    (body.touchscreen !== undefined ? body.touchscreen : (preset ? preset.defaultTouchscreen : false))
-  );
+  let touchStat = "";
+  let kbLayout = "English";
+
+  if (body.touchscreen !== undefined || body.touchscreenBad !== undefined || body.noTouchscreen !== undefined) {
+    touchStat = determineTouchStatus(body);
+  } else if (preset) {
+    touchStat = preset.defaultTouchStatus;
+  }
+
+  if (body.frenchKeyboard !== undefined) {
+    kbLayout = normalizeBool(body.frenchKeyboard) ? "French" : "English";
+  } else if (preset) {
+    kbLayout = preset.defaultKeyboardLayout;
+  }
+
+  const touchscreenLegacy = touchStat === "WORKING";
 
   let battery = -1;
   if (!normalizeBool(body.noBattery)) {
@@ -411,7 +459,9 @@ async function createGrade(user, body) {
     cpu,
     ramGb,
     ssdGb,
-    touchscreen,
+    touchscreen: touchscreenLegacy, // legacy
+    touchStatus: touchStat,
+    keyboardLayout: kbLayout,
     batteryHealthPercent: battery,
     notes,
     createdByUserId: user.id
@@ -490,7 +540,7 @@ async function listGradesAdminFiltered(filters) {
 
   const grades = await LaptopGrade.findAll({
     where,
-    include: [includeUser, includePreset],
+    include: [includeUser, includePreset, { model: Order, attributes: ["name", "orderId"] }],
     order: [["createdAt", "DESC"]],
     limit: 1000
   });
@@ -512,7 +562,9 @@ async function updateGrade(id, body) {
     cpu: (body.cpu || "").trim(),
     ramGb: normalizeInt(body.ramGb, 0),
     ssdGb: body.ssdGb ? normalizeInt(body.ssdGb, 0) : null,
-    touchscreen: normalizeBool(body.touchscreen),
+    touchscreen: determineTouchStatus(body) === "WORKING", // legacy
+    touchStatus: determineTouchStatus(body),
+    keyboardLayout: normalizeBool(body.frenchKeyboard) ? "French" : "English",
     batteryHealthPercent: battery,
     notes: (body.notes || "").trim()
   }, { where: { id } });

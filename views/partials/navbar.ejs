@@ -1,125 +1,127 @@
-<div class="navbar bg-white border-b border-base-200 px-4 mb-4">
-  <div class="navbar-start">
-    <div class="dropdown">
-      <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
-        </svg>
-      </div>
-      <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-        <li><a href="/">Home</a></li>
-        <% if (session && session.user) { %>
-          <li>
-            <span class="font-bold">Grade System</span>
-            <ul class="p-2">
-              <li><a href="/orders/new">New Order</a></li>
-              <li><a href="/grades/new">Start Grading</a></li>
-              <li><a href="/grades">History</a></li>
-            </ul>
-          </li>
-          <li>
-            <span class="font-bold">Presets</span>
-            <ul class="p-2">
-              <li><a href="/presets/add">Add Preset</a></li>
-              <li><a href="/presets">List Presets</a></li>
-            </ul>
-          </li>
-          <% if (session.user.role==="ADMIN" ) { %>
+<%# LGS - Laptop Grading System Created by Hiran Tiago Lins Borba Oct 2025 - Mar 2026 License: This project is open
+  source. Contributions and suggestions are (always) welcome. %>
+  <div class="navbar bg-white border-b border-base-200 px-4 mb-4">
+    <div class="navbar-start">
+      <div class="dropdown">
+        <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+          </svg>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+          <li><a href="/">Home</a></li>
+          <% if (session && session.user) { %>
             <li>
-              <span class="font-bold text-secondary">Administration</span>
+              <span class="font-bold">Grade System</span>
               <ul class="p-2">
-                <li><a href="/presets">Manage Presets</a></li>
-                <li><a href="/admin/users">Manage Users</a></li>
+                <li><a href="/orders/new">New Order</a></li>
+                <li><a href="/grades/new">Start Grading</a></li>
+                <li><a href="/grades">History</a></li>
               </ul>
             </li>
             <li>
-              <span class="font-bold text-info">Help</span>
+              <span class="font-bold">Presets</span>
               <ul class="p-2">
-                <li><a href="/help/guidelines">Guidelines</a></li>
-                <li><a href="/help/about">About</a></li>
+                <li><a href="/presets/add">Add Preset</a></li>
+                <li><a href="/presets">List Presets</a></li>
               </ul>
             </li>
-            <% } %>
-              <% } %>
-      </ul>
-    </div>
-    <a href="/" class="flex items-center gap-2 font-bold text-xl tracking-tight text-primary">
-      <div class="w-8 h-8 bg-primary text-primary-content flex items-center justify-center rounded-lg shadow-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
-      <span>LGS <span class="text-base-content font-normal opacity-60">System</span></span>
-    </a>
-  </div>
-
-  <div class="navbar-center hidden lg:flex">
-    <ul class="menu menu-horizontal px-1 gap-1">
-      <li><a href="/" class="rounded-lg">Home</a></li>
-      <% if (session && session.user) { %>
-        <!-- Grade System -->
-        <li>
-          <details class="dropdown">
-            <summary class="rounded-lg">Grade System</summary>
-            <ul class="p-2 bg-base-100 border border-base-200 mt-2 rounded-lg shadow-lg w-48 z-50">
+            <% if (session.user.role==="ADMIN" ) { %>
               <li>
-                <h3 class="menu-title text-opacity-50 text-xs py-1">Orders</h3>
+                <span class="font-bold text-secondary">Administration</span>
+                <ul class="p-2">
+                  <li><a href="/presets">Manage Presets</a></li>
+                  <li><a href="/admin/users">Manage Users</a></li>
+                </ul>
               </li>
-              <li><a href="/orders/new">New Order</a></li>
-              <div class="divider my-0"></div>
-              <li><a href="/grades/new" class="text-primary font-bold">Start Grading</a></li>
-            </ul>
-          </details>
-        </li>
-        <!-- Presets -->
-        <li>
-          <details class="dropdown">
-            <summary class="rounded-lg">Presets</summary>
-            <ul class="p-2 bg-base-100 border border-base-200 mt-2 rounded-lg shadow-lg w-48 z-50">
-              <li><a href="/presets/add">Add Preset</a></li>
-              <li><a href="/presets">List Presets</a></li>
-            </ul>
-          </details>
-        </li>
-        <li><a href="/grades" class="rounded-lg">History</a></li>
-        <% if (session.user.role==="ADMIN" ) { %>
+              <li>
+                <span class="font-bold text-info">Help</span>
+                <ul class="p-2">
+                  <li><a href="/help/guidelines">Guidelines</a></li>
+                  <li><a href="/help/about">About</a></li>
+                </ul>
+              </li>
+              <% } %>
+                <% } %>
+        </ul>
+      </div>
+      <a href="/" class="flex items-center gap-2 font-bold text-xl tracking-tight text-primary">
+        <div class="w-8 h-8 bg-primary text-primary-content flex items-center justify-center rounded-lg shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <span>LGS <span class="text-base-content font-normal opacity-60">System</span></span>
+      </a>
+    </div>
+
+    <div class="navbar-center hidden lg:flex">
+      <ul class="menu menu-horizontal px-1 gap-1">
+        <li><a href="/" class="rounded-lg">Home</a></li>
+        <% if (session && session.user) { %>
+          <!-- Grade System -->
           <li>
             <details class="dropdown">
-              <summary class="rounded-lg text-secondary">Administration</summary>
+              <summary class="rounded-lg">Grade System</summary>
               <ul class="p-2 bg-base-100 border border-base-200 mt-2 rounded-lg shadow-lg w-48 z-50">
-                <li><a href="/presets">Manage Presets</a></li>
-                <li><a href="/admin/users">Manage Users</a></li>
+                <li>
+                  <h3 class="menu-title text-opacity-50 text-xs py-1">Orders</h3>
+                </li>
+                <li><a href="/orders/new">New Order</a></li>
+                <div class="divider my-0"></div>
+                <li><a href="/grades/new" class="text-primary font-bold">Start Grading</a></li>
               </ul>
             </details>
           </li>
-          <% } %>
+          <!-- Presets -->
+          <li>
+            <details class="dropdown">
+              <summary class="rounded-lg">Presets</summary>
+              <ul class="p-2 bg-base-100 border border-base-200 mt-2 rounded-lg shadow-lg w-48 z-50">
+                <li><a href="/presets/add">Add Preset</a></li>
+                <li><a href="/presets">List Presets</a></li>
+              </ul>
+            </details>
+          </li>
+          <li><a href="/grades" class="rounded-lg">History</a></li>
+          <% if (session.user.role==="ADMIN" ) { %>
             <li>
               <details class="dropdown">
-                <summary class="rounded-lg text-info">Help</summary>
+                <summary class="rounded-lg text-secondary">Administration</summary>
                 <ul class="p-2 bg-base-100 border border-base-200 mt-2 rounded-lg shadow-lg w-48 z-50">
-                  <li><a href="/help/guidelines">Guidelines</a></li>
-                  <li><a href="/help/about">About</a></li>
+                  <li><a href="/presets">Manage Presets</a></li>
+                  <li><a href="/admin/users">Manage Users</a></li>
                 </ul>
               </details>
             </li>
             <% } %>
-    </ul>
-  </div>
+              <li>
+                <details class="dropdown">
+                  <summary class="rounded-lg text-info">Help</summary>
+                  <ul class="p-2 bg-base-100 border border-base-200 mt-2 rounded-lg shadow-lg w-48 z-50">
+                    <li><a href="/help/guidelines">Guidelines</a></li>
+                    <li><a href="/help/about">About</a></li>
+                  </ul>
+                </details>
+              </li>
+              <% } %>
+      </ul>
+    </div>
 
-  <div class="navbar-end gap-3">
-    <% if (session && session.user) { %>
-      <div class="hidden sm:flex flex-col items-end leading-tight">
-        <span class="font-bold text-sm">
-          <%= session.user.userName %>
-        </span>
-        <span class="text-[10px] uppercase tracking-wider opacity-60">
-          <%= session.user.role %>
-        </span>
-      </div>
-      <a href="/logout" class="btn btn-outline btn-error btn-sm rounded-lg">Sign Out</a>
-      <% } else { %>
-        <a href="/login" class="btn btn-primary btn-sm rounded-lg px-6">Sign In</a>
-        <% } %>
+    <div class="navbar-end gap-3">
+      <% if (session && session.user) { %>
+        <div class="hidden sm:flex flex-col items-end leading-tight">
+          <span class="font-bold text-sm">
+            <%= session.user.userName %>
+          </span>
+          <span class="text-[10px] uppercase tracking-wider opacity-60">
+            <%= session.user.role %>
+          </span>
+        </div>
+        <a href="/logout" class="btn btn-outline btn-error btn-sm rounded-lg">Sign Out</a>
+        <% } else { %>
+          <a href="/login" class="btn btn-primary btn-sm rounded-lg px-6">Sign In</a>
+          <% } %>
+    </div>
   </div>
-</div>

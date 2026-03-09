@@ -1,3 +1,13 @@
+/**
+ * LGS - Laptop Grading System
+ * Created by Hiran Tiago Lins Borba
+ * Oct 2025 - Mar 2026
+ *
+ * License: 
+ * This project is open source. 
+ * Contributions and suggestions are (always) welcome.
+ */
+
 //to populate db
 
 require("dotenv").config();
