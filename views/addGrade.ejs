@@ -366,12 +366,11 @@
                               </td>
                               <td class="text-right">
                                 <div class="flex justify-end gap-1">
-                                  <button type="button" class="btn btn-ghost btn-xs text-[10px] text-info"
-                                    onclick="document.getElementById('edit-grade-<%= g.id %>').showModal()">edit</button>
+                                  <button type="button" class="btn btn-primary btn-xs text-white"
+                                    onclick="document.getElementById('edit-grade-<%= g.id %>').showModal()">Edit</button>
                                   <form action="/grades/delete/<%= g.id %>" method="POST"
                                     onsubmit="return confirm('Delete this unit?');">
-                                    <button class="btn btn-ghost btn-xs text-[10px] text-error"
-                                      type="submit">del</button>
+                                    <button class="btn btn-error btn-xs text-white" type="submit">Delete</button>
                                   </form>
                                 </div>
 

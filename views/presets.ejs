@@ -119,9 +119,8 @@
                     </td>
                     <td class="text-right">
                       <% if (session.user && session.user.role==='ADMIN' ) { %>
-                        <a class="btn btn-xs btn-outline btn-primary rounded-lg mr-2"
-                          href="/presets/edit/<%= p.id %>">Edit</a>
-                        <button class="btn btn-xs btn-outline btn-error rounded-lg"
+                        <a class="btn btn-primary btn-xs text-white mr-2" href="/presets/edit/<%= p.id %>">Edit</a>
+                        <button class="btn btn-error btn-xs text-white"
                           onclick="document.getElementById('delete_modal_<%= p.id %>').showModal()">Delete</button>
 
                         <!-- Delete Modal -->
