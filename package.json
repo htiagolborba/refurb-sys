@@ -1,7 +1,7 @@
 {
-  "name": "laptop-grading-system",
+  "name": "device-grading-system",
   "version": "1.0.0",
-  "description": "Internal Laptop Grading System (Vercel + Neon)",
+  "description": "Internal Device Grading System (Vercel + Neon)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

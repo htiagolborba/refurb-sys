@@ -1,6 +1,6 @@
-# Laptop Grading System (LGS)
+# Device Grading System (DGS)
 
-Laptop Grading System (LGS) is a lightweight internal web application designed to standardize the laptop grading workflow in refurbishment environments.
+Device Grading System (DGS) is a lightweight internal web application designed to standardize the device grading workflow in refurbishment environments.
 
 It replaces multiple technician-maintained Excel spreadsheets (often shared via USB handoff) with a single browser-based system backed by a centralized database.
 
@@ -11,7 +11,7 @@ It replaces multiple technician-maintained Excel spreadsheets (often shared via 
 In the current workflow:
 
 - Each technician maintains a personal Excel spreadsheet
-- Laptop details (serial number, CPU, RAM, SSD, battery health, notes) are recorded locally
+- Device details (serial number, CPU, RAM, SSD, battery health, notes) are recorded locally
 - Files are exported to a USB drive and handed to a team lead
 - The team lead manually merges spreadsheets into one master file
 
@@ -26,7 +26,7 @@ This creates issues such as:
 
 ## Solution
 
-LGS centralizes grading into a shared system accessible from any browser:
+DGS centralizes device grading into a shared system accessible from any browser:
 
 - One shared database
 - One shared web interface

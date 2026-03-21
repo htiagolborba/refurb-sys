@@ -1,5 +1,5 @@
 /**
- * LGS - Laptop Grading System
+ * DGS - Device Grading System
  * Created by Hiran Tiago Lins Borba
  * Oct 2025 - Mar 2026
  *
