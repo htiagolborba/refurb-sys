@@ -1,119 +1,229 @@
 # Device Grading System (DGS)
 
-Device Grading System (DGS) is a lightweight internal web application designed to standardize the device grading workflow in refurbishment environments.
+Device Grading System (DGS) is a browser-based internal tool built to standardize grading and inspection workflows in refurbishment environments.
 
-It replaces multiple technician-maintained Excel spreadsheets (often shared via USB handoff) with a single browser-based system backed by a centralized database.
+Instead of relying on multiple technician-maintained spreadsheets, USB handoff, and manual consolidation, DGS centralizes grading records in a single shared system with structured data, permission-based access, and exportable reporting.
 
----
+## Live Demo
 
-## Problem
+**Demo:** [https://dgs-demo.onrender.com](https://dgs-demo.onrender.com)
 
-In the current workflow:
-
-- Each technician maintains a personal Excel spreadsheet
-- Device details (serial number, CPU, RAM, SSD, battery health, notes) are recorded locally
-- Files are exported to a USB drive and handed to a team lead
-- The team lead manually merges spreadsheets into one master file
-
-This creates issues such as:
-
-- Inconsistent formats and missing data
-- Duplicate work and manual merge errors
-- No centralized history, auditing, or fast searching
-- Risk of lost/overwritten USB files
+> Note: the first load may take a little longer because the demo is hosted on Render's free tier, which can spin down after inactivity.
 
 ---
 
-## Solution
+## Overview
 
-DGS centralizes device grading into a shared system accessible from any browser:
+In many refurbishment workflows, technicians record device information in separate Excel files, then hand those files off for manual consolidation. This process is slow, inconsistent, and difficult to audit.
 
-- One shared database
-- One shared web interface
-- Standardized grading workflow
-- Model presets to speed up entry and reduce inconsistencies
+DGS was created to replace that workflow with a centralized web application where technicians and administrators can manage grading records, presets, users, and exports in one place.
+
+![DGS Home](assets/images/home.png)
+
+---
+
+## The Problem
+
+In the original workflow:
+
+- Each technician maintained a separate spreadsheet
+- Device data was entered manually in inconsistent formats
+- Files were transferred through USB handoff
+- Results had to be merged manually into a master file
+- Historical search and auditing were limited
+- Reporting depended on manual cleanup and formatting
+
+This created several operational issues:
+
+- Duplicate work
+- Data inconsistency
+- Manual merge errors
+- Lack of traceability
+- Poor scalability as team volume increased
+
+---
+
+## The Solution
+
+DGS centralizes grading into one shared browser-based platform.
+
+It provides:
+
+- A shared database for all grading records
+- Standardized entry forms and preset-based workflows
+- Role-based access for admins and technicians
+- Searchable grading history
+- CSV and Excel export support
+- Structured order-based organization for device batches
 
 ---
 
 ## Key Features
 
-- **User & Permission Management**: Standardized DB-backed users with granular roles and permissions (Admins vs Technicians).
-- **Model Presets**: Auto-fill hardware fields (CPU, RAM, SSD, Touch, Keyboard) with optional overrides.
-- **Advanced Grading Form**:
-  - Battery health tracking with "No Battery" support.
-  - Keyboard layout selection (English / French).
-  - Multi-state Touchscreen status (GOOD, BAD, NO).
-  - Quick-insert buttons for common quality observations.
-- **Intelligent History**:
-  - Filter by Technician, Date, Model Preset, or Order ID.
-  - Global Search by Serial Number across all orders.
-  - Dynamic result numbering and author-based color coding.
-- **Export Capabilities**: Generate professional Excel (.xlsx) and CSV reports with customized styling for audit-ready documentation.
-- **Order Management**: Group evaluations into distinct Orders for better logistics tracking.
+### Preset-Based Device Configuration
+
+Technicians can select predefined device presets so common hardware specifications are automatically filled in. This speeds up data entry, reduces typing, and improves consistency across the team.
+
+### Advanced Grading Workflow
+
+The grading interface captures both hardware configuration and inspection details in a structured form, including:
+
+- Serial number
+- Battery health percentage
+- Touchscreen status
+- Keyboard layout
+- Cosmetic and functional observations
+- Order association for grouped processing
+
+Quick-insert observation buttons are also available to accelerate common notes and standardize wording during grading.
+
+![Grading Overview](assets/images/grading-overview.png)
+
+![Grading Workflow](assets/images/grading-workflow.png)
+
+### Searchable History and Reporting
+
+The history module supports advanced filtering across inspection records, making it easier to review processed units and retrieve specific results.
+
+Available filters include:
+
+- Order name / order ID
+- Serial number
+- Technician
+- Model preset
+- Date range
+
+Search results can also be exported to:
+
+- CSV
+- Excel (.xlsx)
+
+This makes the system useful not only for daily operations, but also for reporting and audit-ready documentation.
+
+![History & Reporting](assets/images/history.png)
+
+### Preset Management
+
+Administrators can define reusable hardware presets to support faster grading.
+
+A preset can include:
+
+- Brand
+- Model
+- Chassis type
+- CPU
+- RAM
+- SSD
+- Touchscreen status
+- Keyboard layout
+- Default observations
+
+This allows the grading workflow to start from a known baseline while still supporting overrides when a unit differs from the standard configuration.
+
+![Configuration Presets](assets/images/presets.png)
+
+### User and Permission Management
+
+DGS includes database-backed user management with role-based access control.
+
+Accounts can be created with different roles and permissions, allowing the system to separate everyday technician workflows from administrative controls.
+
+Examples of managed access include:
+
+- Add / edit / delete presets
+- Create / edit / delete orders
+- Add / edit / delete users
+
+Roles currently include:
+
+- **ADMIN** — elevated privileges for system administration
+- **TECH** — standard operational access for grading tasks
+
+This improves security, reduces accidental changes, and supports controlled adoption across teams.
+
+![User & Permission Management](assets/images/users.png)
+
+### Secure Login
+
+Access to the application is protected through authenticated login and encrypted password handling.
+
+The login screen provides a clean entry point for authorized users while keeping the system restricted to approved personnel.
+
+![Login](assets/images/login.png)
 
 ---
 
 ## Technology Stack
 
-**Backend**
+### Backend
 - Node.js
 - Express.js
-- Sequelize ORM (Multi-dialect support: SQLite & PostgreSQL)
+- Sequelize ORM
 
-**Database**
-- PostgreSQL (Production)
-- SQLite (Local Development)
+### Database
+- PostgreSQL for production
+- SQLite for local development
 
-**Frontend**
-- EJS server-side templates
-- TailwindCSS
+### Frontend
+- EJS
+- Tailwind CSS
 - DaisyUI
 
-**Authentication**
+### Authentication & Security
 - Session-based authentication
 - bcrypt password hashing
+- Role and permission management
 
-**Hosting**
-- Render (Application)
-- Neon (PostgreSQL Database)
+### Hosting
+- Render for application hosting
+- Neon for PostgreSQL database hosting
 
 ---
 
 ## Architecture
 
-Technician PC (browser)
-↓
-Web Application (Node / Express on Render)
-↓
-Centralized Database (Neon / PostgreSQL)
+```text
+Technician Workstation (Browser)
+            ↓
+     Node.js / Express App
+            ↓
+ Centralized Database (PostgreSQL)
+```
 
-No local installation is required, which allows the system to run on restricted workstations.
+Because DGS runs entirely in the browser, it works well in restricted workstation environments where local software installation is limited or unavailable.
 
 ---
 
 ## Project Status
 
-This project has successfully transitioned from MVP to a robust internal tool. Core grading, history tracking, and reporting are fully implemented and optimized for production throughput.
+DGS is currently under active development and has already evolved into a robust internal workflow tool.
 
-### Recent Enhancements:
-- Standardized project-wide header and licensing credits.
-- Refined export formatting for better Excel compatibility.
-- Improved UI alignment and accessibility for grading shortcuts.
+Implemented areas include:
 
-### Roadmap:
-- Reporting dashboards with performance metrics.
-- Automated hardware detection (client-side bridge).
-- Integration with external inventory APIs.
+- Core grading workflow
+- Preset-based device entry
+- User and permission management
+- Searchable grading history
+- CSV / Excel exports
+- Order-based device grouping
+
+Planned future improvements may include:
+
+- Reporting dashboards and operational metrics
+- Additional analytics and summaries
+- More workflow automation
+- Further UI and usability refinements
 
 ---
 
 ## Running Locally
 
 ### Requirements
-- Node.js 18+
-- SQLite (default) or PostgreSQL
 
-### Environment variables
+- Node.js 18+
+- SQLite or PostgreSQL
+
+### Environment Variables
 
 Create a `.env` file:
 
@@ -122,29 +232,42 @@ PGHOST=your-db-host
 PGDATABASE=your-db-name
 PGUSER=your-db-user
 PGPASSWORD=your-db-password
-SESSIONSECRET=your-session-secret
-ADMINUSER=admin
-ADMINPASSWORD=password
-USE_SQLITE=true # Set to true for local testing without Postgres
+SESSIONSECRET=your-random-session-secret
+INITIAL_ADMIN_USER=your-admin-username
+INITIAL_ADMIN_PASS=your-secure-password
+USE_SQLITE=true
 ```
 
-### Install & Run
+### Install and Run
 
-1. `npm install`
-2. `node server.js`
+```bash
+npm install
+node server.js
+```
 
-Application will start on: [http://localhost:8080](http://localhost:8080)
+The app will run locally at:
+
+```text
+http://localhost:8080
+```
+
+---
+
+## Why This Project Matters
+
+DGS was designed around a real operational problem: replacing spreadsheet-based grading workflows with a faster, more consistent, and more secure centralized system.
+
+It is both a practical internal tool and a strong example of full-stack application design focused on process improvement, usability, and real-world business value.
 
 ---
 
 ## Author
 
 Created and maintained by  
-**Hiran Tiago Lins Borba. 2025-2026**
+**Hiran Tiago Lins Borba**
 
 ---
 
 ## License
 
-This project is open source.  
-Contributions and suggestions are (always) welcome.
+This project is open source. Contributions, ideas, and feedback are welcome.
