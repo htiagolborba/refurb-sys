@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: dgs-system 
+    name: laptop-grading-system
     env: node
     plan: free
     buildCommand: npm install && npm run build
