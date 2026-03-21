@@ -22,6 +22,7 @@ const PORT = process.env.PORT || 8080;
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use("/css", express.static(path.join(__dirname, "public/css")));
+app.use("/video", express.static(path.join(__dirname, "public/video")));
 app.use(express.urlencoded({ extended: true }));
 
 // sessions
